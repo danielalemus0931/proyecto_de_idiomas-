@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { VocabularyItem } from '../../types'
 import { generateCrossword } from '../../utils/crosswordGenerator'
 
 type Props = {
   items: VocabularyItem[]
+  onComplete?: () => void
 }
 
-export default function Crossword({ items }: Props) {
+export default function Crossword({ items, onComplete }: Props) {
   const puzzle = useMemo(() => generateCrossword(items, 5), [items])
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [checked, setChecked] = useState(false)
@@ -30,6 +31,10 @@ export default function Crossword({ items }: Props) {
   }).length
 
   const allCorrect = correctCount === puzzle.clues.length
+
+  useEffect(() => {
+    if (checked && allCorrect) onComplete?.()
+  }, [checked, allCorrect, onComplete])
 
   return (
     <section className="activity-section">

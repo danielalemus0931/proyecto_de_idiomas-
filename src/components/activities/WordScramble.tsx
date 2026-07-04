@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { VocabularyItem } from '../../types'
 import { scrambleWord } from '../../utils/activityHelpers'
 import Pronunciation from '../Pronunciation'
@@ -6,9 +6,10 @@ import Pronunciation from '../Pronunciation'
 type Props = {
   items: VocabularyItem[]
   speechLang: string
+  onComplete?: () => void
 }
 
-export default function WordScramble({ items, speechLang }: Props) {
+export default function WordScramble({ items, speechLang, onComplete }: Props) {
   const words = useMemo(
     () => items.filter((item) => item.word.replace(/\s/g, '').length >= 3).slice(0, 5),
     [items],
@@ -37,6 +38,10 @@ export default function WordScramble({ items, speechLang }: Props) {
     answer.trim().toLowerCase().replace(/\s/g, '') ===
     current.word.toLowerCase().replace(/\s/g, '')
   const finished = index >= words.length - 1 && checked && isCorrect
+
+  useEffect(() => {
+    if (finished) onComplete?.()
+  }, [finished, onComplete])
 
   const handleCheck = () => {
     setChecked(true)

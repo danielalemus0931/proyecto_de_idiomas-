@@ -1,26 +1,32 @@
-import { useState } from 'react'
-import type { VocabularyItem } from '../../types'
-import type { QuizOption } from '../../types'
+import { useMemo, useState } from 'react'
+import type { GrammarBlock, LessonActivityId, StudentGrade, VocabularyItem, WrittenQuizQuestion } from '../../types'
+import { ACTIVITY_LABELS, ALL_LESSON_ACTIVITIES } from '../../lib/lessonProgress'
+import GrammarSection from './GrammarSection'
+import WrittenQuiz from './WrittenQuiz'
 import Crossword from './Crossword'
 import MatchingGame from './MatchingGame'
 import WordScramble from './WordScramble'
 import WordSearch from './WordSearch'
 import Pronunciation from '../Pronunciation'
 
-type ActivityTab = 'vocab' | 'quiz' | 'wordsearch' | 'crossword' | 'matching' | 'scramble'
+type ActivityTab = LessonActivityId
 
 type Props = {
   lessonWords: VocabularyItem[]
-  quizOptions?: QuizOption[]
-  quizPrompt?: string
-  quizAnswer: string | null
+  grammarBlocks: GrammarBlock[]
+  quizQuestions: WrittenQuizQuestion[]
+  studentGrade: StudentGrade
   speechLang: string
-  onQuizAnswer: (optionId: string, correct: boolean) => void
+  completedActivities: LessonActivityId[]
+  lessonCompleted?: boolean
+  onActivityComplete: (activity: LessonActivityId) => void
+  onQuizVerify: (passed: boolean, score: number, total: number) => void
 }
 
 const TABS: { id: ActivityTab; label: string; icon: string }[] = [
+  { id: 'grammar', label: 'Gramática', icon: '📝' },
   { id: 'vocab', label: 'Vocabulario', icon: '📖' },
-  { id: 'quiz', label: 'Quiz', icon: '❓' },
+  { id: 'quiz', label: 'Quiz escrito', icon: '✍️' },
   { id: 'wordsearch', label: 'Sopa de letras', icon: '🔍' },
   { id: 'crossword', label: 'Crucigrama', icon: '🧩' },
   { id: 'matching', label: 'Emparejar', icon: '🔗' },
@@ -29,16 +35,58 @@ const TABS: { id: ActivityTab; label: string; icon: string }[] = [
 
 export default function LessonActivities({
   lessonWords,
-  quizOptions,
-  quizPrompt,
-  quizAnswer,
+  grammarBlocks,
+  quizQuestions,
+  studentGrade,
   speechLang,
-  onQuizAnswer,
+  completedActivities,
+  lessonCompleted = false,
+  onActivityComplete,
+  onQuizVerify,
 }: Props) {
-  const [tab, setTab] = useState<ActivityTab>('vocab')
+  const [tab, setTab] = useState<ActivityTab>('grammar')
+  const quizKey = useMemo(
+    () => `${studentGrade}-${quizQuestions.map((q) => q.id).join('-')}`,
+    [studentGrade, quizQuestions],
+  )
+
+  const doneSet = new Set(completedActivities)
+  const progressCount = completedActivities.length
+  const allDone = ALL_LESSON_ACTIVITIES.every((a) => doneSet.has(a))
+
+  const handleQuizVerify = (passed: boolean, score: number, total: number) => {
+    if (passed) onActivityComplete('quiz')
+    onQuizVerify(passed, score, total)
+  }
 
   return (
     <div className="lesson-activities">
+      <div className="activity-progress-panel">
+        <div className="activity-progress-header">
+          <span>
+            Actividades: <strong>{progressCount}</strong> / {ALL_LESSON_ACTIVITIES.length}
+          </span>
+          {allDone ? (
+            <span className="activity-progress-done">¡Lección lista para avanzar!</span>
+          ) : (
+            <span className="activity-progress-hint">Completa todas para desbloquear la siguiente</span>
+          )}
+        </div>
+        <div className="activity-progress-bar" aria-hidden="true">
+          <div
+            className="activity-progress-fill"
+            style={{ width: `${(progressCount / ALL_LESSON_ACTIVITIES.length) * 100}%` }}
+          />
+        </div>
+        <ul className="activity-checklist">
+          {ALL_LESSON_ACTIVITIES.map((id) => (
+            <li key={id} className={doneSet.has(id) ? 'done' : ''}>
+              {doneSet.has(id) ? '✓' : '○'} {ACTIVITY_LABELS[id]}
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="activity-tabs" role="tablist">
         {TABS.map((item) => (
           <button
@@ -46,20 +94,30 @@ export default function LessonActivities({
             type="button"
             role="tab"
             aria-selected={tab === item.id}
-            className={`activity-tab ${tab === item.id ? 'active' : ''}`}
+            className={`activity-tab ${tab === item.id ? 'active' : ''} ${doneSet.has(item.id) ? 'tab-done' : ''}`}
             onClick={() => setTab(item.id)}
           >
             <span aria-hidden="true">{item.icon}</span> {item.label}
+            {doneSet.has(item.id) && <span className="tab-check"> ✓</span>}
           </button>
         ))}
       </div>
 
       <div className="activity-panel" role="tabpanel">
+        {tab === 'grammar' && (
+          <GrammarSection
+            blocks={grammarBlocks}
+            completed={doneSet.has('grammar')}
+            onConfirmRead={() => onActivityComplete('grammar')}
+          />
+        )}
+
         {tab === 'vocab' && (
           <>
-            <h3 className="section-title">Vocabulario</h3>
-            <p className="activity-hint">
-              🔊 Escucha la pronunciación · 🎤 repite y practica (Chrome o Edge).
+            <h3 className="section-title">Vocabulario en contexto</h3>
+            <p className="grammar-intro">
+              Curso {studentGrade}° · 🔊 Escucha la pronunciación · 🎤 repite y practica (Chrome o
+              Edge). Revisa todas las palabras antes de confirmar.
             </p>
             <div className="vocab-list">
               {lessonWords.map((item) => (
@@ -71,55 +129,50 @@ export default function LessonActivities({
                 </article>
               ))}
             </div>
+            {doneSet.has('vocab') ? (
+              <p className="activity-feedback success">✓ Vocabulario confirmado</p>
+            ) : (
+              <button
+                type="button"
+                className="activity-button activity-confirm-btn"
+                onClick={() => onActivityComplete('vocab')}
+              >
+                Confirmar vocabulario revisado
+              </button>
+            )}
           </>
         )}
 
-        {tab === 'quiz' && quizOptions && quizPrompt && (
-          <section className="quiz-section">
-            <h3>Quiz rápido</h3>
-            <p className="quiz-prompt">{quizPrompt}</p>
-            <div className="quiz-options">
-              {quizOptions.map((option) => {
-                const isSelected = quizAnswer === option.id
-                const showResult = quizAnswer !== null
-                let className = 'quiz-option'
-                if (showResult && option.correct) className += ' correct'
-                if (showResult && isSelected && !option.correct) className += ' incorrect'
-
-                return (
-                  <button
-                    key={option.id}
-                    className={className}
-                    disabled={quizAnswer !== null}
-                    onClick={() => onQuizAnswer(option.id, option.correct)}
-                  >
-                    {option.text}
-                  </button>
-                )
-              })}
-            </div>
-            {quizAnswer && (
-              <p
-                className={`quiz-feedback ${
-                  quizOptions.find((o) => o.id === quizAnswer)?.correct ? 'success' : 'error'
-                }`}
-              >
-                {quizOptions.find((o) => o.id === quizAnswer)?.correct
-                  ? '¡Correcto! Sigue practicando.'
-                  : 'Casi — revisa el vocabulario e inténtalo de nuevo.'}
-              </p>
-            )}
-          </section>
+        {tab === 'quiz' && (
+          <WrittenQuiz
+            key={quizKey}
+            questions={quizQuestions}
+            grade={studentGrade}
+            lessonCompleted={lessonCompleted}
+            onVerify={handleQuizVerify}
+          />
         )}
 
-        {tab === 'quiz' && (!quizOptions || !quizPrompt) && (
-          <p className="activity-hint">Esta lección aún no tiene quiz. Prueba otra actividad.</p>
+        {tab === 'wordsearch' && (
+          <WordSearch items={lessonWords} onComplete={() => onActivityComplete('wordsearch')} />
         )}
-
-        {tab === 'wordsearch' && <WordSearch items={lessonWords} />}
-        {tab === 'crossword' && <Crossword items={lessonWords} />}
-        {tab === 'matching' && <MatchingGame items={lessonWords} speechLang={speechLang} />}
-        {tab === 'scramble' && <WordScramble items={lessonWords} speechLang={speechLang} />}
+        {tab === 'crossword' && (
+          <Crossword items={lessonWords} onComplete={() => onActivityComplete('crossword')} />
+        )}
+        {tab === 'matching' && (
+          <MatchingGame
+            items={lessonWords}
+            speechLang={speechLang}
+            onComplete={() => onActivityComplete('matching')}
+          />
+        )}
+        {tab === 'scramble' && (
+          <WordScramble
+            items={lessonWords}
+            speechLang={speechLang}
+            onComplete={() => onActivityComplete('scramble')}
+          />
+        )}
       </div>
     </div>
   )

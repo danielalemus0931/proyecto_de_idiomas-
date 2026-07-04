@@ -7,8 +7,19 @@ export type Language = {
   level: string
 }
 
+export type LanguageLevel = {
+  id: string
+  languageId: string
+  order: number
+  name: string
+  difficulty: string
+  description: string
+}
+
 export type Lesson = {
   id: string
+  levelId: string
+  order: number
   title: string
   topic: string
   duration: string
@@ -25,6 +36,38 @@ export type QuizOption = {
   id: string
   text: string
   correct: boolean
+}
+
+export type StudentGrade = 8 | 9 | 10 | 11
+
+export type GrammarBlock = {
+  id: string
+  title: string
+  kind: 'structure' | 'verb' | 'conditional'
+  explanation: string
+  detail: string
+  pattern: string
+  points: string[]
+  examples: { phrase: string; translation: string }[]
+  practice: string
+}
+
+export type LessonActivityId =
+  | 'grammar'
+  | 'vocab'
+  | 'quiz'
+  | 'wordsearch'
+  | 'crossword'
+  | 'matching'
+  | 'scramble'
+
+export type WrittenQuizQuestion = {
+  id: string
+  kind: 'translate' | 'complete' | 'conjugate' | 'conditional' | 'structure'
+  prompt: string
+  hint?: string
+  acceptableAnswers: string[]
+  explanation: string
 }
 
 // Roles: 'staff' agrupa a docentes y administrativos (mismo rol).

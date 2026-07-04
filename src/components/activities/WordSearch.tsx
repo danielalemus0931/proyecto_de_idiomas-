@@ -1,15 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { VocabularyItem } from '../../types'
 import { getActivityWords } from '../../utils/activityHelpers'
 import { generateWordSearch } from '../../utils/wordSearchGenerator'
 
 type Props = {
   items: VocabularyItem[]
+  onComplete?: () => void
 }
 
 type Cell = { row: number; col: number }
 
-export default function WordSearch({ items }: Props) {
+export default function WordSearch({ items, onComplete }: Props) {
   const words = useMemo(() => getActivityWords(items, 6), [items])
   const puzzle = useMemo(() => generateWordSearch(words), [words])
   const [found, setFound] = useState<Set<string>>(new Set())
@@ -64,6 +65,10 @@ export default function WordSearch({ items }: Props) {
   }
 
   const allFound = puzzle.words.every((w) => found.has(w.normalized))
+
+  useEffect(() => {
+    if (allFound) onComplete?.()
+  }, [allFound, onComplete])
 
   return (
     <section className="activity-section">
