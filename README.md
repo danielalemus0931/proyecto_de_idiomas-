@@ -2,6 +2,16 @@
 
 Aplicación web para aprender vocabulario en inglés, francés, portugués e italiano.
 
+## Estructura del proyecto
+
+```
+proyecto_de_idiomas-/
+├── src/          # Código de la aplicación web
+├── public/       # Archivos públicos
+├── front/        # Reservado para frontend adicional
+└── back/         # Reservado para backend / API
+```
+
 ## Cómo ver la app en tu computadora
 
 ```powershell
@@ -24,25 +34,14 @@ Abre el enlace que aparece (ej: `http://localhost:5173`).
 
 ### Opción B — GitHub (compartir el código)
 
-Tu repositorio ya está conectado a:
-`https://github.com/danielalemus0931/proyecto_de_idiomas-`
-
-En PowerShell, dentro de la carpeta del proyecto:
-
-```powershell
-git add .
-git commit -m "Primera version de la app de idiomas"
-git push -u origin main
-```
-
-Luego comparte el enlace de GitHub. Cualquiera puede ver y descargar el código.
+Repositorio: `https://github.com/danielalemus0931/proyecto_de_idiomas-`
 
 ### Opción C — GitHub Pages (enlace público gratis)
 
-1. Sube el código a GitHub (Opción B)
+1. Sube el código a GitHub
 2. Ejecuta: `npm.cmd run build`
 3. En GitHub, ve a tu repositorio → **Settings** → **Pages**
-4. En **Source**, elige **GitHub Actions** o sube manualmente la carpeta `dist`
+4. Sube o publica la carpeta `dist`
 5. Tu app quedará en: `https://danielalemus0931.github.io/proyecto_de_idiomas-/`
 
 ## Comandos útiles
