@@ -2,6 +2,7 @@ export type Language = {
   id: string
   name: string
   flag: string
+  code: string
   description: string
   level: string
 }

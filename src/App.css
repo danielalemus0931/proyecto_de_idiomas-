@@ -649,3 +649,469 @@
 .login-toggle:hover {
   text-decoration: underline;
 }
+
+/* ============================================================
+   TEMA IDIOMAS — rediseño visual (banderas, degradados, botones)
+   ============================================================ */
+
+/* ---- Hero / encabezado principal ---- */
+.app-header {
+  position: relative;
+  padding: 2rem 1rem;
+}
+.app-header::before {
+  content: '🇬🇧 🇫🇷 🇵🇹 🇮🇹 🇪🇸 🇩🇪';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.5rem;
+  font-size: 1.4rem;
+  opacity: 0.14;
+  letter-spacing: 1rem;
+  pointer-events: none;
+  filter: saturate(1.3);
+}
+.logo {
+  font-size: 2rem;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.logo-icon {
+  -webkit-text-fill-color: initial;
+  font-size: 2.2rem;
+  animation: spin-slow 18s linear infinite;
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.app-header h1 {
+  font-weight: 800;
+  background: var(--gradient-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---- Barra de estadísticas ---- */
+.stats-bar .stat-card:nth-child(1) { border-top: 4px solid var(--color-primary); }
+.stats-bar .stat-card:nth-child(2) { border-top: 4px solid var(--color-sky); }
+.stats-bar .stat-card:nth-child(3) { border-top: 4px solid var(--color-accent); }
+.stat-value {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---- Tarjetas de idioma ---- */
+.language-card {
+  position: relative;
+  overflow: hidden;
+  padding-top: 1.5rem;
+}
+.language-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+}
+.language-card:nth-child(4n+1)::before { background: var(--gradient-primary); }
+.language-card:nth-child(4n+2)::before { background: var(--gradient-warm); }
+.language-card:nth-child(4n+3)::before { background: var(--gradient-hero); }
+.language-card:nth-child(4n)::before   { background: linear-gradient(135deg, #48dbfb, #6c5ce7); }
+.language-card:hover {
+  transform: translateY(-6px) scale(1.015);
+  box-shadow: var(--shadow-glow);
+  border-color: transparent;
+}
+.language-flag {
+  font-size: 2.4rem;
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f3f0ff, #e8fff8);
+  box-shadow: inset 0 0 0 1px rgba(108, 92, 231, 0.1);
+  transition: transform 0.25s ease;
+}
+.language-card:hover .language-flag {
+  transform: rotate(-6deg) scale(1.08);
+}
+.language-card h3 { font-weight: 700; }
+.badge {
+  background: var(--gradient-warm);
+  color: #7a3d00;
+  font-weight: 700;
+}
+
+/* ---- Encabezado de lección con bandera protagonista ---- */
+.lesson-header {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 1.75rem;
+}
+.lesson-header-flag {
+  font-size: 2.6rem;
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: var(--gradient-hero);
+  box-shadow: var(--shadow-md);
+}
+.lesson-header-text h2 { margin: 0 0 0.2rem; font-weight: 800; }
+.lesson-header-text p { margin: 0; color: var(--color-muted); }
+
+/* ---- Tarjetas de lección ---- */
+.lesson-card {
+  align-items: center;
+  gap: 1rem;
+  border-radius: var(--radius);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.lesson-card:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-glow);
+  border-color: transparent;
+}
+.lesson-number {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: var(--shadow-sm);
+}
+.lesson-card-body { flex: 1; }
+.lesson-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+.lesson-chip {
+  font-size: 0.78rem;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  background: #f3f0ff;
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+.lesson-arrow {
+  font-size: 1.4rem;
+  color: var(--color-primary);
+  transition: transform 0.15s ease;
+}
+.lesson-card:hover .lesson-arrow { transform: translateX(4px); }
+
+/* ---- Tarjetas de vocabulario ---- */
+.vocab-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.vocab-card {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding: 1.1rem;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 5px solid var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.vocab-card:nth-child(5n+2) { border-left-color: var(--color-coral); }
+.vocab-card:nth-child(5n+3) { border-left-color: var(--color-accent); }
+.vocab-card:nth-child(5n+4) { border-left-color: var(--color-sky); }
+.vocab-card:nth-child(5n+5) { border-left-color: var(--color-amber); }
+.vocab-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.vocab-flag {
+  font-size: 1.6rem;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #f7f6ff;
+}
+.vocab-card-body { flex: 1; }
+.vocab-word {
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---- Botones llamativos (barra superior y navegación) ---- */
+.nav-link {
+  border: none;
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  font-weight: 700;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.nav-link:hover {
+  transform: translateY(-2px);
+  background: var(--gradient-primary);
+  color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+.nav-link.logout:hover {
+  background: var(--gradient-warm);
+  color: #7a1500;
+}
+.role-badge {
+  background: var(--gradient-hero);
+  color: #fff;
+  font-weight: 700;
+}
+
+.back-button {
+  background: var(--gradient-primary);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.55rem 1rem;
+}
+.back-button:hover { box-shadow: var(--shadow-glow); }
+
+/* ---- Botones de acción / formularios / quiz ---- */
+.login-button,
+.form-button {
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.login-button:hover:not(:disabled),
+.form-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+.quiz-option {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+.quiz-option:not(:disabled):hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+.logo-icon {
+  display: inline-block;
+}
+
+/* ============================================================
+   MOSAICO CULTURAL DE BANDERAS (fondo decorativo)
+   ============================================================ */
+.flag-mosaic {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+  grid-auto-rows: 58px;
+  justify-items: center;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.16;
+  filter: saturate(1.3);
+  /* Se desvanece hacia el centro para no estorbar la lectura del contenido */
+  -webkit-mask-image: radial-gradient(ellipse 72% 62% at 50% 44%, transparent 22%, #000 92%);
+  mask-image: radial-gradient(ellipse 72% 62% at 50% 44%, transparent 22%, #000 92%);
+}
+.flag-mosaic-tile {
+  font-size: 1.9rem;
+  line-height: 1;
+  user-select: none;
+  transition: transform 6s ease-in-out;
+}
+
+/* El contenido siempre por encima del mosaico */
+.app,
+.login-screen {
+  position: relative;
+  z-index: 1;
+}
+
+/* Con el mosaico de fondo, la fila decorativa del hero ya no hace falta */
+.app-header::before {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .flag-mosaic {
+    animation: mosaic-drift 40s ease-in-out infinite alternate;
+  }
+}
+@keyframes mosaic-drift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-14px); }
+}
+
+/* ============================================================
+   ESTILO FORMAL — banderas reales (SVG) y tono sobrio
+   (sobreescribe el tema anterior)
+   ============================================================ */
+
+/* Imagen de bandera: rectangular, bordes suaves, marco sutil */
+.flag-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Quitar degradados de texto y animaciones (tono formal) */
+.logo {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #23204d;
+  font-weight: 700;
+}
+.logo-icon { animation: none; }
+.app-header h1 {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #23204d;
+  font-weight: 800;
+}
+.stat-value {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: var(--color-primary);
+}
+.vocab-word {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #23204d;
+  font-weight: 700;
+}
+
+/* Contenedores de bandera: rectángulo 3:2 con marco y sombra discretos */
+.language-flag {
+  width: 72px;
+  height: 48px;
+  padding: 0;
+  border-radius: 6px;
+  background: none;
+  box-shadow: 0 1px 4px rgba(20, 20, 50, 0.16);
+  border: 1px solid rgba(20, 20, 50, 0.08);
+  overflow: hidden;
+}
+.language-card:hover .language-flag { transform: none; }
+
+.lesson-header-flag {
+  width: 84px;
+  height: 56px;
+  border-radius: 8px;
+  background: none;
+  box-shadow: 0 2px 8px rgba(20, 20, 50, 0.18);
+  border: 1px solid rgba(20, 20, 50, 0.08);
+  overflow: hidden;
+}
+
+.vocab-flag {
+  width: 40px;
+  height: 27px;
+  border-radius: 5px;
+  background: none;
+  box-shadow: 0 1px 3px rgba(20, 20, 50, 0.16);
+  border: 1px solid rgba(20, 20, 50, 0.08);
+  overflow: hidden;
+}
+
+/* Elementos formales (sin degradados chillones) */
+.badge {
+  background: #eef0f6;
+  color: #4a4a68;
+  font-weight: 600;
+}
+.lesson-number {
+  background: #23204d;
+  box-shadow: none;
+}
+.lesson-chip {
+  background: #eef0f6;
+  color: #45455f;
+  font-weight: 600;
+}
+.role-badge {
+  background: #eef0f6;
+  color: #3a3a5a;
+  font-weight: 600;
+}
+.language-card::before { height: 4px; opacity: 0.85; }
+.language-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.language-card:hover .language-flag { transform: none; }
+
+/* Botones: hover sobrio en color sólido (no degradado) */
+.nav-link:hover {
+  background: #23204d;
+  color: #fff;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.nav-link.logout:hover {
+  background: #c0392b;
+  color: #fff;
+}
+.back-button {
+  background: #23204d;
+  color: #fff;
+}
+.back-button:hover { box-shadow: var(--shadow-md); }
+.vocab-card:nth-child(5n+1),
+.vocab-card:nth-child(5n+2),
+.vocab-card:nth-child(5n+3),
+.vocab-card:nth-child(5n+4),
+.vocab-card:nth-child(5n+5) {
+  border-left-color: #d7d9e6;
+}
+
+/* ---- Mosaico de banderas: visible pero sobrio ---- */
+.flag-mosaic {
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  grid-auto-rows: 48px;
+  gap: 14px;
+  opacity: 0.5;
+  filter: saturate(0.85);
+  animation: none;
+  -webkit-mask-image: radial-gradient(ellipse 68% 60% at 50% 46%, transparent 30%, #000 96%);
+  mask-image: radial-gradient(ellipse 68% 60% at 50% 46%, transparent 30%, #000 96%);
+}
+.flag-mosaic-tile {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(20, 20, 50, 0.12);
+  transition: none;
+}

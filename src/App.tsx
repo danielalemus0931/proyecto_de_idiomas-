@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import Login from './components/Login'
 import AdminDashboard from './components/AdminDashboard'
+import { Flag } from './components/flags'
 import { supabase } from './lib/supabase'
 import {
   defaultVocabulary,
@@ -182,8 +183,8 @@ function App() {
                 className="language-card"
                 onClick={() => openLanguage(language.id)}
               >
-                <span className="language-flag" aria-hidden="true">
-                  {language.flag}
+                <span className="language-flag">
+                  <Flag code={language.code} className="flag-svg" />
                 </span>
                 <h3>{language.name}</h3>
                 <p>{language.description}</p>
@@ -200,23 +201,31 @@ function App() {
             ← Volver
           </button>
           <header className="lesson-header">
-            <h2>
-              {selectedLanguage.flag} {selectedLanguage.name}
-            </h2>
-            <p>Selecciona una lección para empezar.</p>
+            <span className="lesson-header-flag">
+              <Flag code={selectedLanguage.code} className="flag-svg" />
+            </span>
+            <div className="lesson-header-text">
+              <h2>{selectedLanguage.name}</h2>
+              <p>Selecciona una lección para empezar.</p>
+            </div>
           </header>
 
           <div className="lesson-list">
-            {languageLessons.map((lesson) => (
+            {languageLessons.map((lesson, index) => (
               <button
                 key={lesson.id}
                 className="lesson-card"
                 onClick={() => openLesson(lesson.id)}
               >
-                <div>
+                <span className="lesson-number" aria-hidden="true">
+                  {index + 1}
+                </span>
+                <div className="lesson-card-body">
                   <h3>{lesson.title}</h3>
                   <p className="lesson-meta">
-                    {lesson.topic} · {lesson.duration} · {lesson.words} palabras
+                    <span className="lesson-chip">{lesson.topic}</span>
+                    <span className="lesson-chip">{lesson.duration}</span>
+                    <span className="lesson-chip">{lesson.words} palabras</span>
                   </p>
                 </div>
                 <span className="lesson-arrow" aria-hidden="true">
@@ -234,19 +243,29 @@ function App() {
             ← Lecciones
           </button>
           <header className="lesson-header">
-            <h2>{currentLesson.title}</h2>
-            <p>
-              {selectedLanguage.name} · {currentLesson.topic}
-            </p>
+            <span className="lesson-header-flag" aria-hidden="true">
+              {selectedLanguage.flag}
+            </span>
+            <div className="lesson-header-text">
+              <h2>{currentLesson.title}</h2>
+              <p>
+                {selectedLanguage.name} · {currentLesson.topic}
+              </p>
+            </div>
           </header>
 
           <h3 className="section-title">Vocabulario</h3>
           <div className="vocab-list">
             {lessonWords.map((item) => (
               <article key={item.word} className="vocab-card">
-                <p className="vocab-word">{item.word}</p>
-                <p className="vocab-translation">{item.translation}</p>
-                <p className="vocab-example">"{item.example}"</p>
+                <span className="vocab-flag">
+                  <Flag code={selectedLanguage.code} className="flag-svg" />
+                </span>
+                <div className="vocab-card-body">
+                  <p className="vocab-word">{item.word}</p>
+                  <p className="vocab-translation">{item.translation}</p>
+                  <p className="vocab-example">"{item.example}"</p>
+                </div>
               </article>
             ))}
           </div>
