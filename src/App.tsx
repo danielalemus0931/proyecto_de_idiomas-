@@ -3,6 +3,7 @@ import './App.css'
 import Login from './components/Login'
 import AdminDashboard from './components/AdminDashboard'
 import { Flag } from './components/flags'
+import LessonActivities from './components/activities/LessonActivities'
 import { supabase } from './lib/supabase'
 import {
   defaultVocabulary,
@@ -226,6 +227,7 @@ function App() {
                     <span className="lesson-chip">{lesson.topic}</span>
                     <span className="lesson-chip">{lesson.duration}</span>
                     <span className="lesson-chip">{lesson.words} palabras</span>
+                    <span className="lesson-chip">6 actividades</span>
                   </p>
                 </div>
                 <span className="lesson-arrow" aria-hidden="true">
@@ -243,8 +245,8 @@ function App() {
             ← Lecciones
           </button>
           <header className="lesson-header">
-            <span className="lesson-header-flag" aria-hidden="true">
-              {selectedLanguage.flag}
+            <span className="lesson-header-flag">
+              <Flag code={selectedLanguage.code} className="flag-svg" />
             </span>
             <div className="lesson-header-text">
               <h2>{currentLesson.title}</h2>
@@ -254,61 +256,14 @@ function App() {
             </div>
           </header>
 
-          <h3 className="section-title">Vocabulario</h3>
-          <div className="vocab-list">
-            {lessonWords.map((item) => (
-              <article key={item.word} className="vocab-card">
-                <span className="vocab-flag">
-                  <Flag code={selectedLanguage.code} className="flag-svg" />
-                </span>
-                <div className="vocab-card-body">
-                  <p className="vocab-word">{item.word}</p>
-                  <p className="vocab-translation">{item.translation}</p>
-                  <p className="vocab-example">"{item.example}"</p>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {quizOptions && quizPrompt && (
-            <section className="quiz-section">
-              <h3>Practica</h3>
-              <p className="quiz-prompt">{quizPrompt}</p>
-              <div className="quiz-options">
-                {quizOptions.map((option) => {
-                  const isSelected = quizAnswer === option.id
-                  const showResult = quizAnswer !== null
-                  let className = 'quiz-option'
-                  if (showResult && option.correct) className += ' correct'
-                  if (showResult && isSelected && !option.correct) className += ' incorrect'
-
-                  return (
-                    <button
-                      key={option.id}
-                      className={className}
-                      disabled={quizAnswer !== null}
-                      onClick={() => handleQuizAnswer(option.id, option.correct)}
-                    >
-                      {option.text}
-                    </button>
-                  )
-                })}
-              </div>
-              {quizAnswer && (
-                <p
-                  className={`quiz-feedback ${
-                    quizOptions.find((o) => o.id === quizAnswer)?.correct
-                      ? 'success'
-                      : 'error'
-                  }`}
-                >
-                  {quizOptions.find((o) => o.id === quizAnswer)?.correct
-                    ? '¡Correcto! Sigue practicando.'
-                    : 'Casi — revisa el vocabulario e inténtalo de nuevo.'}
-                </p>
-              )}
-            </section>
-          )}
+          <LessonActivities
+            key={selectedLessonId}
+            lessonWords={lessonWords}
+            quizOptions={quizOptions}
+            quizPrompt={quizPrompt}
+            quizAnswer={quizAnswer}
+            onQuizAnswer={handleQuizAnswer}
+          />
         </>
       )}
     </div>
