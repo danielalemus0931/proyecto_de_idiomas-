@@ -1395,3 +1395,233 @@
     font-size: 0.75rem;
   }
 }
+
+/* ===== Stop competitivo ===== */
+.stop-competitive-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  border: 2px solid rgba(108, 92, 231, 0.35);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(0, 184, 148, 0.08));
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stop-competitive-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow, var(--shadow-md));
+}
+
+.stop-competitive-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.stop-competitive-body h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.stop-competitive-body p {
+  margin: 0 0 0.5rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.stop-competitive-tag {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.stop-game {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stop-header h2 {
+  margin: 0.35rem 0;
+}
+
+.stop-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: #fff3cd;
+  color: #856404;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.stop-letter-box {
+  text-align: center;
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.stop-letter-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  margin-bottom: 0.35rem;
+}
+
+.stop-letter {
+  display: block;
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-primary);
+}
+
+.stop-letter-note {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.stop-section {
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.stop-rules {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.stop-timer {
+  text-align: center;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: #fff5f5;
+  border: 2px solid #ff7675;
+}
+
+.stop-timer-value {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #d63031;
+  line-height: 1;
+}
+
+.stop-timer-label {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.stop-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.stop-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.stop-field input {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.stop-field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.stop-start,
+.stop-submit {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.stop-result {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.stop-result-score {
+  margin: 0 0 0.35rem;
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+.stop-leaderboard h3 {
+  margin: 0 0 0.75rem;
+}
+
+.stop-ranking {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stop-ranking li {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: #faf9ff;
+  border: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.stop-ranking li:first-child {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.stop-rank {
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.stop-rank-name {
+  font-weight: 600;
+}
+
+.stop-rank-meta {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.stop-rank-score {
+  font-weight: 700;
+  color: var(--color-primary);
+}

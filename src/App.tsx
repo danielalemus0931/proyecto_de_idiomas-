@@ -4,6 +4,7 @@ import Login from './components/Login'
 import AdminDashboard from './components/AdminDashboard'
 import { Flag } from './components/flags'
 import LessonActivities from './components/activities/LessonActivities'
+import StopGame from './components/activities/StopGame'
 import { supabase } from './lib/supabase'
 import {
   defaultVocabulary,
@@ -15,7 +16,7 @@ import {
 } from './data/content'
 import type { Role, User } from './types'
 
-type Screen = 'home' | 'lessons' | 'lesson' | 'admin'
+type Screen = 'home' | 'lessons' | 'lesson' | 'stop' | 'admin'
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -94,6 +95,10 @@ function App() {
     setScreen('lessons')
     setSelectedLessonId(null)
     setQuizAnswer(null)
+  }
+
+  const openStopGame = () => {
+    setScreen('stop')
   }
 
   const handleLogout = async () => {
@@ -211,6 +216,24 @@ function App() {
             </div>
           </header>
 
+          <button type="button" className="stop-competitive-card" onClick={openStopGame}>
+            <span className="stop-competitive-icon" aria-hidden="true">
+              ⚡
+            </span>
+            <div className="stop-competitive-body">
+              <h3>Stop competitivo</h3>
+              <p>
+                90 segundos · nombre, animal, país, cosa, alimento, color y verbo. Compite con otros
+                estudiantes de {selectedLanguage.name}.
+              </p>
+              <span className="stop-competitive-tag">Actividad extra del idioma</span>
+            </div>
+            <span className="lesson-arrow" aria-hidden="true">
+              →
+            </span>
+          </button>
+
+          <h3 className="section-title">Lecciones</h3>
           <div className="lesson-list">
             {languageLessons.map((lesson, index) => (
               <button
@@ -236,6 +259,19 @@ function App() {
               </button>
             ))}
           </div>
+        </>
+      )}
+
+      {screen === 'stop' && selectedLanguage && currentUser && (
+        <>
+          <button className="back-button" onClick={goToLessons}>
+            ← Lecciones
+          </button>
+          <StopGame
+            languageId={selectedLanguage.id}
+            languageName={selectedLanguage.name}
+            currentUser={currentUser}
+          />
         </>
       )}
 
