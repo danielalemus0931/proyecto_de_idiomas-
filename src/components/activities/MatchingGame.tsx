@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import type { VocabularyItem } from '../../types'
 import { shuffle } from '../../utils/activityHelpers'
+import { speak } from '../../lib/speech'
 
 type Props = {
   items: VocabularyItem[]
+  speechLang: string
 }
 
-export default function MatchingGame({ items }: Props) {
+export default function MatchingGame({ items, speechLang }: Props) {
   const pairs = useMemo(
     () => items.slice(0, 6).map((item) => ({ id: item.word, word: item.word, translation: item.translation })),
     [items],
@@ -26,6 +28,7 @@ export default function MatchingGame({ items }: Props) {
     if (pair?.translation === translation) {
       setMatched((prev) => new Set([...prev, word]))
       setMessage(`¡Correcto! "${word}" = "${translation}"`)
+      speak(word, speechLang) // refuerza la pronunciación al acertar
       setSelectedWord(null)
       setSelectedTranslation(null)
     } else {

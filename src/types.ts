@@ -30,11 +30,14 @@ export type QuizOption = {
 // Roles: 'staff' agrupa a docentes y administrativos (mismo rol).
 export type Role = 'staff' | 'student'
 
+export type Gender = 'male' | 'female'
+
 export type User = {
   id: string
   name: string
   email: string
   role: Role
+  gender: Gender
 }
 
 export type Activity = {
@@ -69,16 +72,18 @@ export type TeacherActivity = {
   lastAction: string
 }
 
-// Configuración del avatar personalizable (DiceBear avataaars).
+// Configuración del avatar de cuerpo entero (SVG propio).
 export type AvatarConfig = {
-  skinColor: string
-  top: string
-  hairColor: string
-  clothing: string
-  clothesColor: string
-  eyes: string
-  eyebrows: string
-  mouth: string
-  accessories: string // '' = ninguno
-  facialHair: string // '' = ninguno
+  skin: string // hex
+  hair: string // id de estilo
+  hairColor: string // hex
+  top: string // id de estilo (si es 'dress', cubre también el inferior)
+  topColor: string // hex
+  bottom: string // id de estilo
+  bottomColor: string // hex
+  shoes: string // id de estilo
+  shoesColor: string // hex
+  expression: string // id de emoción (ojos + cejas + boca + detalles)
+  accessory: string // '' = ninguno
+  background: string // hex
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Role } from '../types'
+import type { Gender, Role } from '../types'
 
 function Login() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
@@ -8,6 +8,7 @@ function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<Role>('student')
+  const [gender, setGender] = useState<Gender>('female')
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -29,7 +30,7 @@ function Login() {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-        options: { data: { name: name.trim(), role } },
+        options: { data: { name: name.trim(), role, gender } },
       })
       if (error) {
         setError(traducirError(error.message))
@@ -100,13 +101,22 @@ function Login() {
           </label>
 
           {mode === 'signup' && (
-            <label className="login-label">
-              Rol
-              <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
-                <option value="student">Estudiante</option>
-                <option value="staff">Docente / Administrativo</option>
-              </select>
-            </label>
+            <>
+              <label className="login-label">
+                Rol
+                <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                  <option value="student">Estudiante</option>
+                  <option value="staff">Docente / Administrativo</option>
+                </select>
+              </label>
+              <label className="login-label">
+                Personaje
+                <select value={gender} onChange={(e) => setGender(e.target.value as Gender)}>
+                  <option value="female">Femenino</option>
+                  <option value="male">Masculino</option>
+                </select>
+              </label>
+            </>
           )}
 
           {error && <p className="login-error">{error}</p>}

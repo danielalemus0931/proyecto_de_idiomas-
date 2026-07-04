@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
-import type { AvatarConfig } from '../types'
-import { AVATAR_CATEGORIES, buildAvatarDataUri } from '../lib/avatar'
+import { useState } from 'react'
+import type { AvatarConfig, Gender } from '../types'
+import { AVATAR_CATEGORIES } from '../lib/avatar'
+import BodyAvatar from './BodyAvatar'
 import {
   BADGES,
   earnedBadges,
@@ -13,10 +14,11 @@ import {
 type Props = {
   config: AvatarConfig
   points: number
+  gender: Gender
   onChange: (config: AvatarConfig) => void
 }
 
-export default function AvatarStudio({ config, points, onChange }: Props) {
+export default function AvatarStudio({ config, points, gender, onChange }: Props) {
   const [activeCat, setActiveCat] = useState(AVATAR_CATEGORIES[0].key)
 
   const level = levelFromPoints(points)
@@ -25,26 +27,24 @@ export default function AvatarStudio({ config, points, onChange }: Props) {
   const badges = earnedBadges(points)
   const earnedIds = new Set(badges.map((b) => b.id))
 
-  const avatarUri = useMemo(() => buildAvatarDataUri(config), [config])
-
   const category = AVATAR_CATEGORIES.find((c) => c.key === activeCat)!
+  // Opciones válidas para el género del estudiante.
+  const options = category.options.filter((o) => !o.gender || o.gender === gender)
 
-  const setValue = (value: string) => {
-    onChange({ ...config, [category.key]: value })
-  }
+  const setValue = (value: string) => onChange({ ...config, [category.key]: value })
 
   return (
     <section className="avatar-studio">
       <header className="dashboard-header">
         <h2>Mi avatar</h2>
-        <p>Gana puntos, sube de nivel y desbloquea nuevos estilos para tu personaje.</p>
+        <p>Gana puntos, sube de nivel y desbloquea nuevos estilos y accesorios para tu personaje.</p>
       </header>
 
       <div className="studio-grid">
-        {/* --- Columna izquierda: avatar + progreso + insignias --- */}
+        {/* Columna izquierda: avatar + progreso + insignias */}
         <aside className="studio-side">
           <div className="avatar-preview-big">
-            <img src={avatarUri} alt="Tu avatar" />
+            <BodyAvatar config={config} size={220} />
           </div>
 
           <div className="level-box">
@@ -63,7 +63,9 @@ export default function AvatarStudio({ config, points, onChange }: Props) {
           </div>
 
           <div className="badges-box">
-            <h3 className="studio-subtitle">Insignias ({badges.length}/{BADGES.length})</h3>
+            <h3 className="studio-subtitle">
+              Insignias ({badges.length}/{BADGES.length})
+            </h3>
             <div className="badges-grid">
               {BADGES.map((b) => {
                 const got = earnedIds.has(b.id)
@@ -82,7 +84,7 @@ export default function AvatarStudio({ config, points, onChange }: Props) {
           </div>
         </aside>
 
-        {/* --- Columna derecha: personalización --- */}
+        {/* Columna derecha: personalización */}
         <div className="studio-main">
           <div className="cat-tabs">
             {AVATAR_CATEGORIES.map((c) => (
@@ -97,7 +99,6 @@ export default function AvatarStudio({ config, points, onChange }: Props) {
           </div>
 
           <div className="options-grid">
-            {/* Opción "ninguno" para accesorios / vello facial */}
             {category.allowNone && (
               <button
                 className={`option-tile ${config[category.key] === '' ? 'selected' : ''}`}
@@ -108,7 +109,7 @@ export default function AvatarStudio({ config, points, onChange }: Props) {
               </button>
             )}
 
-            {category.options.map((opt) => {
+            {options.map((opt) => {
               const locked = level < opt.level
               const selected = config[category.key] === opt.value
 
@@ -124,7 +125,6 @@ export default function AvatarStudio({ config, points, onChange }: Props) {
                 )
               }
 
-              const previewUri = buildAvatarDataUri({ ...config, [category.key]: opt.value })
               return (
                 <button
                   key={opt.value}
@@ -133,7 +133,13 @@ export default function AvatarStudio({ config, points, onChange }: Props) {
                   onClick={() => setValue(opt.value)}
                   title={locked ? `Se desbloquea en el nivel ${opt.level}` : opt.label}
                 >
-                  <img className="option-avatar" src={previewUri} alt={opt.label} />
+                  <span className="option-avatar-wrap">
+                    <BodyAvatar
+                      config={{ ...config, [category.key]: opt.value }}
+                      size={58}
+                      showBackground={false}
+                    />
+                  </span>
                   <span className="option-label">{opt.label}</span>
                   {locked && <span className="option-lock">🔒 Nv {opt.level}</span>}
                 </button>

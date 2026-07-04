@@ -19,14 +19,16 @@ create table if not exists public.profiles (
   name text not null default '',
   email text not null,
   role user_role not null default 'student',
+  gender text not null default 'female',
   points int not null default 0,
   avatar_config jsonb,
   created_at timestamptz not null default now()
 );
 
--- Columnas de gamificación (por si la tabla ya existía sin ellas).
+-- Columnas de gamificación / avatar (por si la tabla ya existía sin ellas).
 alter table public.profiles add column if not exists points int not null default 0;
 alter table public.profiles add column if not exists avatar_config jsonb;
+alter table public.profiles add column if not exists gender text not null default 'female';
 
 -- ---------- Tabla: activities (actividades que crean los docentes) ----------
 create table if not exists public.activities (
@@ -135,12 +137,13 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, name, email, role)
+  insert into public.profiles (id, name, email, role, gender)
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'name', ''),
     new.email,
-    coalesce((new.raw_user_meta_data ->> 'role')::user_role, 'student')
+    coalesce((new.raw_user_meta_data ->> 'role')::user_role, 'student'),
+    coalesce(new.raw_user_meta_data ->> 'gender', 'female')
   )
   on conflict (id) do nothing;
   return new;

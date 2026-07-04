@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import type { VocabularyItem } from '../../types'
 import { scrambleWord } from '../../utils/activityHelpers'
+import Pronunciation from '../Pronunciation'
 
 type Props = {
   items: VocabularyItem[]
+  speechLang: string
 }
 
-export default function WordScramble({ items }: Props) {
+export default function WordScramble({ items, speechLang }: Props) {
   const words = useMemo(
     () => items.filter((item) => item.word.replace(/\s/g, '').length >= 3).slice(0, 5),
     [items],
@@ -86,11 +88,14 @@ export default function WordScramble({ items }: Props) {
       </p>
 
       {checked && (
-        <p className={`activity-feedback ${isCorrect ? 'success' : 'error'}`}>
-          {isCorrect
-            ? `¡Correcto! La palabra es "${current.word}".`
-            : `Casi. La respuesta correcta es "${current.word}".`}
-        </p>
+        <>
+          <p className={`activity-feedback ${isCorrect ? 'success' : 'error'}`}>
+            {isCorrect
+              ? `¡Correcto! La palabra es "${current.word}".`
+              : `Casi. La respuesta correcta es "${current.word}".`}
+          </p>
+          <Pronunciation text={current.word} lang={speechLang} />
+        </>
       )}
 
       {finished && (

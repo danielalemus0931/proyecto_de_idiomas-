@@ -6,9 +6,11 @@ import { Flag } from './components/flags'
 import LessonActivities from './components/activities/LessonActivities'
 import StopGame from './components/activities/StopGame'
 import AvatarStudio from './components/AvatarStudio'
+import BodyAvatar from './components/BodyAvatar'
 import { supabase } from './lib/supabase'
-import { buildAvatarDataUri, DEFAULT_AVATAR, mergeAvatar } from './lib/avatar'
+import { defaultAvatar, mergeAvatar } from './lib/avatar'
 import { levelFromPoints, POINTS_PER_CORRECT } from './lib/gamification'
+import { LANG_BCP47 } from './lib/speech'
 import {
   defaultVocabulary,
   languages,
@@ -17,7 +19,7 @@ import {
   quizQuestions,
   vocabulary,
 } from './data/content'
-import type { AvatarConfig, Role, User } from './types'
+import type { AvatarConfig, Gender, Role, User } from './types'
 
 type Screen = 'home' | 'lessons' | 'lesson' | 'stop' | 'admin' | 'avatar'
 
@@ -29,25 +31,26 @@ function App() {
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null)
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null)
   const [points, setPoints] = useState(0)
-  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(DEFAULT_AVATAR)
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(defaultAvatar('female'))
 
   useEffect(() => {
-    // Carga el perfil (nombre, rol, puntos y avatar) desde la tabla profiles.
+    // Carga el perfil (nombre, rol, género, puntos y avatar) desde profiles.
     const loadProfile = async (userId: string, email: string) => {
       const { data } = await supabase
         .from('profiles')
-        .select('id, name, email, role, points, avatar_config')
+        .select('id, name, email, role, gender, points, avatar_config')
         .eq('id', userId)
         .single()
       if (data) {
-        setCurrentUser({ id: data.id, name: data.name, email: data.email, role: data.role })
+        const gender: Gender = data.gender === 'male' ? 'male' : 'female'
+        setCurrentUser({ id: data.id, name: data.name, email: data.email, role: data.role, gender })
         setPoints(data.points ?? 0)
-        setAvatarConfig(data.avatar_config ? mergeAvatar(data.avatar_config) : DEFAULT_AVATAR)
+        setAvatarConfig(mergeAvatar(gender, data.avatar_config))
       } else {
         // Perfil aún no creado: usa valores mínimos por defecto.
-        setCurrentUser({ id: userId, name: email, email, role: 'student' as Role })
+        setCurrentUser({ id: userId, name: email, email, role: 'student' as Role, gender: 'female' })
         setPoints(0)
-        setAvatarConfig(DEFAULT_AVATAR)
+        setAvatarConfig(defaultAvatar('female'))
       }
     }
 
@@ -153,7 +156,9 @@ function App() {
     <div className="app">
       <nav className="top-bar">
         <span className="top-bar-user">
-          <img className="top-bar-avatar" src={buildAvatarDataUri(avatarConfig)} alt="Tu avatar" />
+          <span className="top-bar-avatar">
+            <BodyAvatar config={avatarConfig} size={54} showBackground={false} />
+          </span>
           <span className="top-bar-user-info">
             {currentUser.name}
             <span className="top-bar-meta">
@@ -185,7 +190,12 @@ function App() {
       {screen === 'admin' && currentUser.role === 'staff' && <AdminDashboard />}
 
       {screen === 'avatar' && (
-        <AvatarStudio config={avatarConfig} points={points} onChange={handleAvatarChange} />
+        <AvatarStudio
+          config={avatarConfig}
+          points={points}
+          gender={currentUser.gender}
+          onChange={handleAvatarChange}
+        />
       )}
 
       {screen === 'home' && (
@@ -333,6 +343,7 @@ function App() {
             quizOptions={quizOptions}
             quizPrompt={quizPrompt}
             quizAnswer={quizAnswer}
+            speechLang={LANG_BCP47[selectedLanguage.id] ?? 'en-US'}
             onQuizAnswer={handleQuizAnswer}
           />
         </>

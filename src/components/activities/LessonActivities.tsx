@@ -5,6 +5,7 @@ import Crossword from './Crossword'
 import MatchingGame from './MatchingGame'
 import WordScramble from './WordScramble'
 import WordSearch from './WordSearch'
+import Pronunciation from '../Pronunciation'
 
 type ActivityTab = 'vocab' | 'quiz' | 'wordsearch' | 'crossword' | 'matching' | 'scramble'
 
@@ -13,6 +14,7 @@ type Props = {
   quizOptions?: QuizOption[]
   quizPrompt?: string
   quizAnswer: string | null
+  speechLang: string
   onQuizAnswer: (optionId: string, correct: boolean) => void
 }
 
@@ -30,6 +32,7 @@ export default function LessonActivities({
   quizOptions,
   quizPrompt,
   quizAnswer,
+  speechLang,
   onQuizAnswer,
 }: Props) {
   const [tab, setTab] = useState<ActivityTab>('vocab')
@@ -55,12 +58,16 @@ export default function LessonActivities({
         {tab === 'vocab' && (
           <>
             <h3 className="section-title">Vocabulario</h3>
+            <p className="activity-hint">
+              🔊 Escucha la pronunciación · 🎤 repite y practica (Chrome o Edge).
+            </p>
             <div className="vocab-list">
               {lessonWords.map((item) => (
                 <article key={item.word} className="vocab-card">
                   <p className="vocab-word">{item.word}</p>
                   <p className="vocab-translation">{item.translation}</p>
                   <p className="vocab-example">&quot;{item.example}&quot;</p>
+                  <Pronunciation text={item.word} lang={speechLang} />
                 </article>
               ))}
             </div>
@@ -111,8 +118,8 @@ export default function LessonActivities({
 
         {tab === 'wordsearch' && <WordSearch items={lessonWords} />}
         {tab === 'crossword' && <Crossword items={lessonWords} />}
-        {tab === 'matching' && <MatchingGame items={lessonWords} />}
-        {tab === 'scramble' && <WordScramble items={lessonWords} />}
+        {tab === 'matching' && <MatchingGame items={lessonWords} speechLang={speechLang} />}
+        {tab === 'scramble' && <WordScramble items={lessonWords} speechLang={speechLang} />}
       </div>
     </div>
   )
