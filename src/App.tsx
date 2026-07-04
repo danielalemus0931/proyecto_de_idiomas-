@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
+import Login from './components/Login'
+import AdminDashboard from './components/AdminDashboard'
+import { supabase } from './lib/supabase'
 import {
   defaultVocabulary,
   languages,
@@ -8,14 +11,53 @@ import {
   quizQuestions,
   vocabulary,
 } from './data/content'
+import type { Role, User } from './types'
 
-type Screen = 'home' | 'lessons' | 'lesson'
+type Screen = 'home' | 'lessons' | 'lesson' | 'admin'
 
 function App() {
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const [screen, setScreen] = useState<Screen>('home')
   const [selectedLanguageId, setSelectedLanguageId] = useState<string | null>(null)
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null)
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Carga el perfil (nombre y rol) desde la tabla profiles.
+    const loadProfile = async (userId: string, email: string) => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, name, email, role')
+        .eq('id', userId)
+        .single()
+      if (data) {
+        setCurrentUser(data as User)
+      } else {
+        // Perfil aún no creado: usa valores mínimos por defecto.
+        setCurrentUser({ id: userId, name: email, email, role: 'student' as Role })
+      }
+    }
+
+    // Sesión inicial (si ya había una guardada).
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadProfile(session.user.id, session.user.email ?? '')
+      }
+      setAuthLoading(false)
+    })
+
+    // Reacciona a inicios/cierres de sesión.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        loadProfile(session.user.id, session.user.email ?? '')
+      } else {
+        setCurrentUser(null)
+      }
+    })
+
+    return () => sub.subscription.unsubscribe()
+  }, [])
 
   const selectedLanguage = languages.find((lang) => lang.id === selectedLanguageId)
   const languageLessons = selectedLanguageId ? lessons[selectedLanguageId] ?? [] : []
@@ -52,6 +94,12 @@ function App() {
     setQuizAnswer(null)
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setCurrentUser(null)
+    goHome()
+  }
+
   const handleQuizAnswer = (optionId: string, correct: boolean) => {
     if (quizAnswer !== null) return
     setQuizAnswer(optionId)
@@ -60,8 +108,44 @@ function App() {
     }
   }
 
+  if (authLoading) {
+    return (
+      <div className="login-screen">
+        <p>Cargando…</p>
+      </div>
+    )
+  }
+
+  if (!currentUser) {
+    return <Login />
+  }
+
   return (
     <div className="app">
+      <nav className="top-bar">
+        <span className="top-bar-user">
+          👤 {currentUser.name}
+          <span className="role-badge">
+            {currentUser.role === 'staff' ? 'Docente / Administrativo' : 'Estudiante'}
+          </span>
+        </span>
+        <div className="top-bar-actions">
+          <button className="nav-link" onClick={goHome}>
+            Inicio
+          </button>
+          {currentUser.role === 'staff' && (
+            <button className="nav-link" onClick={() => setScreen('admin')}>
+              Panel administrativo
+            </button>
+          )}
+          <button className="nav-link logout" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
+        </div>
+      </nav>
+
+      {screen === 'admin' && currentUser.role === 'staff' && <AdminDashboard />}
+
       {screen === 'home' && (
         <>
           <header className="app-header">

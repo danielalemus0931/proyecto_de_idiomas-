@@ -3,3 +3,8 @@ dist
 dist-ssr
 *.local
 .DS_Store
+
+# Variables de entorno (claves de Supabase, etc.) — NUNCA subir
+.env
+.env.*
+!.env.example

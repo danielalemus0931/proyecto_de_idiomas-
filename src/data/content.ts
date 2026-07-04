@@ -1,4 +1,4 @@
-import type { Language, Lesson, QuizOption, VocabularyItem } from './types'
+import type { Language, Lesson, QuizOption, VocabularyItem } from '../types'
 
 export const languages: Language[] = [
   {
