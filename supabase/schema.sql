@@ -19,8 +19,14 @@ create table if not exists public.profiles (
   name text not null default '',
   email text not null,
   role user_role not null default 'student',
+  points int not null default 0,
+  avatar_config jsonb,
   created_at timestamptz not null default now()
 );
+
+-- Columnas de gamificación (por si la tabla ya existía sin ellas).
+alter table public.profiles add column if not exists points int not null default 0;
+alter table public.profiles add column if not exists avatar_config jsonb;
 
 -- ---------- Tabla: activities (actividades que crean los docentes) ----------
 create table if not exists public.activities (

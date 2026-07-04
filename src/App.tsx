@@ -5,7 +5,10 @@ import AdminDashboard from './components/AdminDashboard'
 import { Flag } from './components/flags'
 import LessonActivities from './components/activities/LessonActivities'
 import StopGame from './components/activities/StopGame'
+import AvatarStudio from './components/AvatarStudio'
 import { supabase } from './lib/supabase'
+import { buildAvatarDataUri, DEFAULT_AVATAR, mergeAvatar } from './lib/avatar'
+import { levelFromPoints, POINTS_PER_CORRECT } from './lib/gamification'
 import {
   defaultVocabulary,
   languages,
@@ -14,9 +17,9 @@ import {
   quizQuestions,
   vocabulary,
 } from './data/content'
-import type { Role, User } from './types'
+import type { AvatarConfig, Role, User } from './types'
 
-type Screen = 'home' | 'lessons' | 'lesson' | 'stop' | 'admin'
+type Screen = 'home' | 'lessons' | 'lesson' | 'stop' | 'admin' | 'avatar'
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -25,20 +28,26 @@ function App() {
   const [selectedLanguageId, setSelectedLanguageId] = useState<string | null>(null)
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null)
   const [quizAnswer, setQuizAnswer] = useState<string | null>(null)
+  const [points, setPoints] = useState(0)
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(DEFAULT_AVATAR)
 
   useEffect(() => {
-    // Carga el perfil (nombre y rol) desde la tabla profiles.
+    // Carga el perfil (nombre, rol, puntos y avatar) desde la tabla profiles.
     const loadProfile = async (userId: string, email: string) => {
       const { data } = await supabase
         .from('profiles')
-        .select('id, name, email, role')
+        .select('id, name, email, role, points, avatar_config')
         .eq('id', userId)
         .single()
       if (data) {
-        setCurrentUser(data as User)
+        setCurrentUser({ id: data.id, name: data.name, email: data.email, role: data.role })
+        setPoints(data.points ?? 0)
+        setAvatarConfig(data.avatar_config ? mergeAvatar(data.avatar_config) : DEFAULT_AVATAR)
       } else {
         // Perfil aún no creado: usa valores mínimos por defecto.
         setCurrentUser({ id: userId, name: email, email, role: 'student' as Role })
+        setPoints(0)
+        setAvatarConfig(DEFAULT_AVATAR)
       }
     }
 
@@ -107,12 +116,25 @@ function App() {
     goHome()
   }
 
+  // Guarda puntos y/o avatar del usuario actual en Supabase.
+  const persistProfile = async (fields: { points?: number; avatar_config?: AvatarConfig }) => {
+    if (!currentUser) return
+    await supabase.from('profiles').update(fields).eq('id', currentUser.id)
+  }
+
   const handleQuizAnswer = (optionId: string, correct: boolean) => {
     if (quizAnswer !== null) return
     setQuizAnswer(optionId)
     if (correct) {
-      // Placeholder for future progress tracking
+      const newPoints = points + POINTS_PER_CORRECT
+      setPoints(newPoints)
+      void persistProfile({ points: newPoints })
     }
+  }
+
+  const handleAvatarChange = (config: AvatarConfig) => {
+    setAvatarConfig(config)
+    void persistProfile({ avatar_config: config })
   }
 
   if (authLoading) {
@@ -131,14 +153,23 @@ function App() {
     <div className="app">
       <nav className="top-bar">
         <span className="top-bar-user">
-          👤 {currentUser.name}
-          <span className="role-badge">
-            {currentUser.role === 'staff' ? 'Docente / Administrativo' : 'Estudiante'}
+          <img className="top-bar-avatar" src={buildAvatarDataUri(avatarConfig)} alt="Tu avatar" />
+          <span className="top-bar-user-info">
+            {currentUser.name}
+            <span className="top-bar-meta">
+              <span className="role-badge">
+                {currentUser.role === 'staff' ? 'Docente / Administrativo' : 'Estudiante'}
+              </span>
+              <span className="level-badge small">Nivel {levelFromPoints(points)}</span>
+            </span>
           </span>
         </span>
         <div className="top-bar-actions">
           <button className="nav-link" onClick={goHome}>
             Inicio
+          </button>
+          <button className="nav-link" onClick={() => setScreen('avatar')}>
+            Mi avatar
           </button>
           {currentUser.role === 'staff' && (
             <button className="nav-link" onClick={() => setScreen('admin')}>
@@ -152,6 +183,10 @@ function App() {
       </nav>
 
       {screen === 'admin' && currentUser.role === 'staff' && <AdminDashboard />}
+
+      {screen === 'avatar' && (
+        <AvatarStudio config={avatarConfig} points={points} onChange={handleAvatarChange} />
+      )}
 
       {screen === 'home' && (
         <>

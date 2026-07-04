@@ -68,3 +68,17 @@ export type TeacherActivity = {
   studentsAssigned: number
   lastAction: string
 }
+
+// Configuración del avatar personalizable (DiceBear avataaars).
+export type AvatarConfig = {
+  skinColor: string
+  top: string
+  hairColor: string
+  clothing: string
+  clothesColor: string
+  eyes: string
+  eyebrows: string
+  mouth: string
+  accessories: string // '' = ninguno
+  facialHair: string // '' = ninguno
+}
