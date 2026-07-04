@@ -2,10 +2,12 @@ import { useMemo, useState } from 'react'
 import { quizPassThreshold } from '../../lib/courses'
 import { scoreWrittenQuiz } from '../../lib/lessonQuiz'
 import type { StudentGrade, WrittenQuizQuestion } from '../../types'
+import SpeakButton from '../SpeakButton'
 
 type Props = {
   questions: WrittenQuizQuestion[]
   grade: StudentGrade
+  speechLang: string
   lessonCompleted?: boolean
   onVerify: (passed: boolean, score: number, total: number) => void
 }
@@ -13,6 +15,7 @@ type Props = {
 export default function WrittenQuiz({
   questions,
   grade,
+  speechLang,
   lessonCompleted = false,
   onVerify,
 }: Props) {
@@ -97,6 +100,13 @@ export default function WrittenQuiz({
                     </>
                   )}
                   {ok && q.modelAnswer && <> — {q.explanation}</>}
+                  {q.modelAnswer && (
+                    <SpeakButton
+                      text={q.modelAnswer}
+                      lang={speechLang}
+                      title="Escuchar la respuesta correcta"
+                    />
+                  )}
                 </p>
               )}
             </div>

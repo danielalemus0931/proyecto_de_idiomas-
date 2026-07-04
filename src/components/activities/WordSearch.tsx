@@ -2,16 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import type { VocabularyItem } from '../../types'
 import { getActivityWords } from '../../utils/activityHelpers'
 import { generateWordSearch } from '../../utils/wordSearchGenerator'
+import SpeakButton from '../SpeakButton'
 
 type Props = {
   items: VocabularyItem[]
   wordCount?: number
+  speechLang: string
   onComplete?: () => void
 }
 
 type Cell = { row: number; col: number }
 
-export default function WordSearch({ items, wordCount = 6, onComplete }: Props) {
+export default function WordSearch({ items, wordCount = 6, speechLang, onComplete }: Props) {
   const words = useMemo(() => getActivityWords(items, wordCount), [items, wordCount])
   const puzzle = useMemo(() => generateWordSearch(words), [words])
   const [found, setFound] = useState<Set<string>>(new Set())
@@ -107,8 +109,11 @@ export default function WordSearch({ items, wordCount = 6, onComplete }: Props) 
         <ul className="word-search-list">
           {puzzle.words.map((word) => (
             <li key={word.normalized} className={found.has(word.normalized) ? 'found' : ''}>
-              {found.has(word.normalized) ? '✓ ' : '○ '}
-              {word.display}
+              <span>
+                {found.has(word.normalized) ? '✓ ' : '○ '}
+                {word.display}
+              </span>
+              <SpeakButton text={word.display} lang={speechLang} />
             </li>
           ))}
         </ul>

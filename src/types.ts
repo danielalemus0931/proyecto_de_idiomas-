@@ -61,6 +61,7 @@ export type LessonActivityId =
   | 'matching'
   | 'scramble'
   | 'stop'
+  | 'spelling'
 
 export type WrittenQuizQuestion = {
   id: string
@@ -90,6 +91,7 @@ export type User = {
   email: string
   role: Role
   gender: Gender
+  assignedLanguage: string | null // idioma (id) asignado por el docente; null = libre
 }
 
 export type Activity = {

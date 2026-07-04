@@ -25,10 +25,11 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
--- Columnas de gamificación / avatar (por si la tabla ya existía sin ellas).
+-- Columnas de gamificación / avatar / idioma asignado (idempotentes).
 alter table public.profiles add column if not exists points int not null default 0;
 alter table public.profiles add column if not exists avatar_config jsonb;
 alter table public.profiles add column if not exists gender text not null default 'female';
+alter table public.profiles add column if not exists assigned_language text;
 
 -- ---------- Tabla: activities (actividades que crean los docentes) ----------
 create table if not exists public.activities (
@@ -99,6 +100,11 @@ drop policy if exists "profiles_update_self" on public.profiles;
 create policy "profiles_update_self" on public.profiles
   for update using (auth.uid() = id);
 
+-- El docente (staff) puede actualizar los perfiles de los estudiantes (asignar idioma, etc.).
+drop policy if exists "profiles_update_staff" on public.profiles;
+create policy "profiles_update_staff" on public.profiles
+  for update using (public.is_staff()) with check (public.is_staff());
+
 -- ---- activities ----  (solo staff gestiona; todos los autenticados leen)
 drop policy if exists "activities_select" on public.activities;
 create policy "activities_select" on public.activities
@@ -117,7 +123,7 @@ drop policy if exists "grades_write" on public.grades;
 create policy "grades_write" on public.grades
   for all using (public.is_staff()) with check (public.is_staff());
 
--- ---- student_progress ----  (staff ve todo; el estudiante ve solo el suyo)
+-- ---- student_progress ----  (staff ve/gestiona todo; el estudiante ve y guarda el suyo)
 drop policy if exists "progress_select" on public.student_progress;
 create policy "progress_select" on public.student_progress
   for select using (public.is_staff() or student_id = auth.uid());
@@ -125,6 +131,22 @@ create policy "progress_select" on public.student_progress
 drop policy if exists "progress_write" on public.student_progress;
 create policy "progress_write" on public.student_progress
   for all using (public.is_staff()) with check (public.is_staff());
+
+-- El estudiante puede crear/actualizar su propio progreso (sincronización).
+drop policy if exists "progress_insert_self" on public.student_progress;
+create policy "progress_insert_self" on public.student_progress
+  for insert with check (student_id = auth.uid());
+
+drop policy if exists "progress_update_self" on public.student_progress;
+create policy "progress_update_self" on public.student_progress
+  for update using (student_id = auth.uid()) with check (student_id = auth.uid());
+
+-- Un registro de progreso por estudiante e idioma (para upsert).
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'student_progress_student_lang') then
+    alter table public.student_progress add constraint student_progress_student_lang unique (student_id, language);
+  end if;
+end $$;
 
 -- ============================================================
 -- Trigger: crear un profile automáticamente al registrarse un usuario
@@ -166,17 +188,8 @@ select
 from auth.users u
 on conflict (id) do nothing;
 
--- ============================================================
--- Datos de ejemplo para el progreso (estudiantes de muestra sin cuenta).
--- student_id queda NULL porque no son usuarios reales de Auth.
--- ============================================================
-insert into public.student_progress (student_id, name, language, lessons_completed, total_lessons, quiz_accuracy, last_active)
-values
-  (null, 'Ana Estudiante', 'Inglés', 2, 3, 85, 'Hoy'),
-  (null, 'Carlos Pérez', 'Francés', 1, 2, 60, 'Ayer'),
-  (null, 'María López', 'Portugués', 2, 2, 95, 'Hace 2 días'),
-  (null, 'Juan Gómez', 'Italiano', 0, 2, 0, 'Hace 1 semana')
-on conflict do nothing;
+-- El progreso de estudiantes ahora es real (se sincroniza desde la app).
+-- No se insertan datos de ejemplo.
 
 -- ---------- Tabla: stop_scores (juego Stop competitivo por idioma) ----------
 create table if not exists public.stop_scores (

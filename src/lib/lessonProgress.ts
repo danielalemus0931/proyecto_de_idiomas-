@@ -34,7 +34,8 @@ export const RANDOM_ACTIVITY_POOL: LessonActivityId[] = [
 
 
 
-export const FIXED_ACTIVITIES: LessonActivityId[] = [GRAMMAR_ACTIVITY, QUIZ_ACTIVITY, STOP_ACTIVITY]
+export const SPELLING_ACTIVITY: LessonActivityId = 'spelling'
+export const FIXED_ACTIVITIES: LessonActivityId[] = [GRAMMAR_ACTIVITY, QUIZ_ACTIVITY, STOP_ACTIVITY, SPELLING_ACTIVITY]
 
 
 
@@ -130,7 +131,7 @@ export function getActivitiesForLevel(levelId: string): LessonActivityId[] {
 
   const picked = shuffled.slice(0, pickCount)
 
-  return [GRAMMAR_ACTIVITY, ...picked, QUIZ_ACTIVITY, STOP_ACTIVITY]
+  return [GRAMMAR_ACTIVITY, ...picked, QUIZ_ACTIVITY, STOP_ACTIVITY, SPELLING_ACTIVITY]
 
 }
 
@@ -491,6 +492,7 @@ export const ACTIVITY_LABELS: Record<LessonActivityId, string> = {
   scramble: 'Ordenar letras',
 
   stop: 'Stop competitivo',
+  spelling: 'Deletreo',
 
 }
 

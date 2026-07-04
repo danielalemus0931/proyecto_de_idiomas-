@@ -25,6 +25,7 @@ import WordSearch from './WordSearch'
 import StopGame from './StopGame'
 
 import Pronunciation from '../Pronunciation'
+import Spelling from './Spelling'
 
 
 
@@ -66,6 +67,8 @@ type Props = {
 
   onQuizVerify: (passed: boolean, score: number, total: number) => void
 
+  onAwardPoints: (amount: number) => void
+
 }
 
 
@@ -87,6 +90,8 @@ const TAB_META: { id: ActivityTab; label: string; icon: string }[] = [
   { id: 'scramble', label: 'Ordenar letras', icon: '🔤' },
 
   { id: 'stop', label: 'Stop', icon: '⚡' },
+
+  { id: 'spelling', label: 'Deletreo', icon: '🔡' },
 
 ]
 
@@ -181,6 +186,8 @@ export default function LessonActivities({
   onActivityComplete,
 
   onQuizVerify,
+
+  onAwardPoints,
 
 }: Props) {
 
@@ -366,6 +373,20 @@ export default function LessonActivities({
 
       <div className="activity-panel" role="tabpanel">
 
+        {tab === 'spelling' && lessonActivities.includes('spelling') && (
+          <Spelling
+            items={lessonWords}
+            speechLang={speechLang}
+            grade={studentGrade}
+            completed={doneSet.has('spelling')}
+            onComplete={(pts) => {
+              const wasDone = doneSet.has('spelling')
+              onActivityComplete('spelling')
+              if (!wasDone) onAwardPoints(pts)
+            }}
+          />
+        )}
+
         {tab === 'grammar' && lessonActivities.includes('grammar') && (
 
           <ThemeWrap activityId="grammar" topic={lessonTopic} lessonTitle={lessonTitle}>
@@ -373,6 +394,8 @@ export default function LessonActivities({
             <GrammarSection
 
               blocks={grammarBlocks}
+
+              speechLang={speechLang}
 
               completed={doneSet.has('grammar')}
 
@@ -542,6 +565,8 @@ export default function LessonActivities({
 
               grade={studentGrade}
 
+              speechLang={speechLang}
+
               lessonCompleted={lessonCompleted}
 
               onVerify={handleQuizVerify}
@@ -564,6 +589,8 @@ export default function LessonActivities({
 
               wordCount={difficulty.wordSearchCount}
 
+              speechLang={speechLang}
+
               onComplete={() => onActivityComplete('wordsearch')}
 
             />
@@ -583,6 +610,8 @@ export default function LessonActivities({
               items={lessonWords}
 
               clueCount={difficulty.crosswordClues}
+
+              speechLang={speechLang}
 
               onComplete={() => onActivityComplete('crossword')}
 

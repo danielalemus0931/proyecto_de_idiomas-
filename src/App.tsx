@@ -18,6 +18,7 @@ import { supabase } from './lib/supabase'
 import { defaultAvatar, mergeAvatar } from './lib/avatar'
 import { levelFromPoints, POINTS_PER_CORRECT } from './lib/gamification'
 import { LANG_BCP47 } from './lib/speech'
+import { syncStudentProgress } from './lib/progressSync'
 import {
 
   defaultVocabulary,
@@ -91,18 +92,32 @@ function App() {
 
         .from('profiles')
 
-        .select('id, name, email, role, gender, points, avatar_config')
+        .select('id, name, email, role, gender, points, avatar_config, assigned_language')
         .eq('id', userId)
 
         .single()
 
       if (data) {
         const gender: Gender = data.gender === 'male' ? 'male' : 'female'
-        setCurrentUser({ id: data.id, name: data.name, email: data.email, role: data.role, gender })
+        setCurrentUser({
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          role: data.role,
+          gender,
+          assignedLanguage: data.assigned_language ?? null,
+        })
         setPoints(data.points ?? 0)
         setAvatarConfig(mergeAvatar(gender, data.avatar_config))
       } else {
-        setCurrentUser({ id: userId, name: email, email, role: 'student' as Role, gender: 'female' })
+        setCurrentUser({
+          id: userId,
+          name: email,
+          email,
+          role: 'student' as Role,
+          gender: 'female',
+          assignedLanguage: null,
+        })
         setPoints(0)
         setAvatarConfig(defaultAvatar('female'))
       }
@@ -319,6 +334,14 @@ function App() {
 
     if (currentUser?.role === 'student' && !studentGrade) return
 
+    // El docente asigna el idioma: el estudiante solo entra al asignado.
+    if (
+      currentUser?.role === 'student' &&
+      currentUser.assignedLanguage &&
+      currentUser.assignedLanguage !== languageId
+    )
+      return
+
     setSelectedLanguageId(languageId)
 
     setSelectedLessonId(null)
@@ -409,6 +432,20 @@ function App() {
 
 
 
+  const handleAwardPoints = (amount: number) => {
+
+    if (!currentUser || amount <= 0) return
+
+    const newPoints = points + amount
+
+    setPoints(newPoints)
+
+    void persistProfile({ points: newPoints })
+
+  }
+
+
+
   const handleActivityComplete = (activity: LessonActivityId) => {
 
     if (!currentUser || !selectedLanguageId || !selectedLessonId) return
@@ -426,6 +463,17 @@ function App() {
     )
 
     if (allDone) setProgressTick((n) => n + 1)
+
+    // Sincroniza el progreso real a Supabase para que el docente lo vea.
+    if (currentUser.role === 'student' && selectedLanguage) {
+      void syncStudentProgress({
+        studentId: currentUser.id,
+        name: currentUser.name,
+        languageName: selectedLanguage.name,
+        lessonsCompleted: countCompletedInLanguage(currentUser.id, selectedLanguageId),
+        totalLessons: visibleLessonCount || languageLessons.length,
+      })
+    }
 
   }
 
@@ -708,7 +756,13 @@ function App() {
 
             {languages.map((language) => {
 
-              const disabled = currentUser.role === 'student' && !studentGrade
+              const notAssigned =
+                currentUser.role === 'student' &&
+                !!currentUser.assignedLanguage &&
+                currentUser.assignedLanguage !== language.id
+              const isAssigned =
+                currentUser.role === 'student' && currentUser.assignedLanguage === language.id
+              const disabled = (currentUser.role === 'student' && !studentGrade) || notAssigned
 
               return (
 
@@ -736,7 +790,13 @@ function App() {
 
                   <span className="badge">
 
-                    {activeCourse ? activeCourse.difficultyLabel : 'Elige curso'}
+                    {notAssigned
+                      ? '🔒 No asignado'
+                      : isAssigned
+                        ? '✓ Asignado a ti'
+                        : activeCourse
+                          ? activeCourse.difficultyLabel
+                          : 'Elige curso'}
 
                   </span>
 
@@ -1155,6 +1215,7 @@ function App() {
             }
             onActivityComplete={handleActivityComplete}
             onQuizVerify={handleQuizVerify}
+            onAwardPoints={handleAwardPoints}
           />
 
         </>

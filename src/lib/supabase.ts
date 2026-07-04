@@ -10,3 +10,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Cliente aislado (sin persistir sesión) para que el docente pueda crear
+// cuentas de estudiantes sin cerrar su propia sesión.
+export function createIsolatedClient() {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      storageKey: 'langflow-admin-signup',
+    },
+  })
+}

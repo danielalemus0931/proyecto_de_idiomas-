@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { VocabularyItem } from '../../types'
 import { generateCrossword } from '../../utils/crosswordGenerator'
+import SpeakButton from '../SpeakButton'
 
 type Props = {
   items: VocabularyItem[]
   clueCount?: number
+  speechLang: string
   onComplete?: () => void
 }
 
-export default function Crossword({ items, clueCount = 5, onComplete }: Props) {
+export default function Crossword({ items, clueCount = 5, speechLang, onComplete }: Props) {
   const puzzle = useMemo(() => generateCrossword(items, clueCount), [items, clueCount])
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [checked, setChecked] = useState(false)
@@ -75,8 +77,11 @@ export default function Crossword({ items, clueCount = 5, onComplete }: Props) {
                     />
                   ))}
                 </div>
-                {checked && isWrong && (
-                  <p className="crossword-answer-hint">Respuesta: {clue.display}</p>
+                {checked && (
+                  <p className="crossword-answer-hint">
+                    {isWrong ? `Respuesta: ${clue.display}` : clue.display}
+                    <SpeakButton text={clue.display} lang={speechLang} />
+                  </p>
                 )}
               </div>
             </div>

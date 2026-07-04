@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import {
+  checkSpelling,
   comparePronunciation,
   getRecognition,
   recognitionSupported,
@@ -7,11 +8,17 @@ import {
   speechSupported,
 } from '../lib/speech'
 
-type Props = { text: string; lang: string; compact?: boolean }
+type Props = {
+  text: string
+  lang: string
+  compact?: boolean
+  mode?: 'word' | 'spell'
+  onResult?: (ok: boolean) => void
+}
 
 type Status = 'idle' | 'listening' | 'ok' | 'fail' | 'error'
 
-export default function Pronunciation({ text, lang, compact = false }: Props) {
+export default function Pronunciation({ text, lang, compact = false, mode = 'word', onResult }: Props) {
   const [status, setStatus] = useState<Status>('idle')
   const [heard, setHeard] = useState('')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,16 +37,17 @@ export default function Pronunciation({ text, lang, compact = false }: Props) {
     recRef.current = rec
     rec.lang = lang
     rec.interimResults = false
-    rec.maxAlternatives = 3
+    rec.maxAlternatives = mode === 'spell' ? 6 : 3
     setHeard('')
     setStatus('listening')
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rec.onresult = (event: any) => {
       const alternatives = Array.from(event.results[0]).map((r: any) => r.transcript as string)
-      const result = comparePronunciation(alternatives, text)
+      const result = (mode === 'spell' ? checkSpelling : comparePronunciation)(alternatives, text)
       setHeard(result.heard)
       setStatus(result.ok ? 'ok' : 'fail')
+      onResult?.(result.ok)
     }
     rec.onerror = () => setStatus('error')
     rec.onend = () => setStatus((s) => (s === 'listening' ? 'idle' : s))
@@ -64,11 +72,27 @@ export default function Pronunciation({ text, lang, compact = false }: Props) {
         </button>
       )}
 
-      {status === 'listening' && <span className="pron-msg pron-listening">Escuchando… habla ahora</span>}
-      {status === 'ok' && <span className="pron-msg pron-ok">✓ ¡Muy bien! Lo pronunciaste correctamente.</span>}
-      {status === 'fail' && (
+      {status === 'listening' && (
+        <span className="pron-msg pron-listening">
+          Escuchando… {mode === 'spell' ? 'deletrea letra por letra' : 'habla ahora'}
+        </span>
+      )}
+      {status === 'ok' && mode === 'spell' && (
+        <span className="pron-msg pron-ok">✓ ¡Bien deletreado! Se escribe "{text}". 🎉</span>
+      )}
+      {status === 'ok' && mode === 'word' && (
+        <span className="pron-msg pron-ok">✓ ¡Correcto! Dijiste "{text}" muy bien. 🎉</span>
+      )}
+      {status === 'fail' && mode === 'spell' && (
         <span className="pron-msg pron-fail">
-          ✗ Escuché "{heard}". Vuelve a intentarlo.
+          ✗ Aún no. {heard ? `Escuché "${heard}". ` : ''}Deletrea letra por letra:{' '}
+          {text.toUpperCase().split('').join('-')}.
+        </span>
+      )}
+      {status === 'fail' && mode === 'word' && (
+        <span className="pron-msg pron-fail">
+          ✗ Incorrecto. {heard ? `Escuché "${heard}", ` : ''}la palabra correcta es "{text}".
+          Escúchala con 🔊 e intenta de nuevo.
         </span>
       )}
       {status === 'error' && (

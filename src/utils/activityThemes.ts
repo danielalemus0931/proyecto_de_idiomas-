@@ -189,6 +189,7 @@ const ACTIVITY_VISUALS: Record<LessonActivityId, Omit<ActivityVisual, 'image' | 
   matching: { label: 'Emparejar', emoji: '🔗' },
   scramble: { label: 'Ordenar letras', emoji: '🔤' },
   stop: { label: 'Stop competitivo', emoji: '⚡' },
+  spelling: { label: 'Deletreo', emoji: '🔡' },
 }
 
 export function getTopicTheme(topic: string): TopicTheme {

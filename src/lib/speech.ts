@@ -61,6 +61,67 @@ function levenshtein(a: string, b: string): number {
   return dp[m][n]
 }
 
+// Nombres de las letras en inglés → letra (para el deletreo por voz).
+const NAME_TO_LETTER: Record<string, string> = {
+  ay: 'a', eh: 'a',
+  be: 'b', bee: 'b',
+  see: 'c', cee: 'c', sea: 'c',
+  de: 'd', dee: 'd',
+  ee: 'e',
+  ef: 'f', eff: 'f',
+  ge: 'g', gee: 'g', jee: 'g',
+  aitch: 'h', haitch: 'h', ache: 'h', hache: 'h',
+  eye: 'i', ai: 'i',
+  jay: 'j', jai: 'j',
+  kay: 'k', ka: 'k',
+  el: 'l', ell: 'l',
+  em: 'm', emm: 'm',
+  en: 'n', enn: 'n',
+  oh: 'o', ou: 'o',
+  pe: 'p', pee: 'p',
+  cue: 'q', queue: 'q', kew: 'q', kju: 'q',
+  ar: 'r', are: 'r', arr: 'r',
+  es: 's', ess: 's',
+  te: 't', tee: 't', tea: 't',
+  you: 'u', yu: 'u', ewe: 'u',
+  ve: 'v', vee: 'v',
+  'double u': 'w', doubleu: 'w', doubleyou: 'w', dub: 'w',
+  ex: 'x', eks: 'x',
+  why: 'y', wai: 'y',
+  zed: 'z', zee: 'z', zet: 'z', zeta: 'z',
+}
+
+function tokenToLetter(tok: string): string {
+  const t = tok.toLowerCase().replace(/[^a-z ]/g, '').trim()
+  if (!t) return ''
+  if (NAME_TO_LETTER[t]) return NAME_TO_LETTER[t]
+  // una sola letra o (posible) palabra ya concatenada: se conservan sus letras
+  return t.replace(/\s/g, '')
+}
+
+// Verifica que el estudiante haya DELETREADO la palabra (letra por letra).
+export function checkSpelling(
+  heardList: string[],
+  target: string,
+): { ok: boolean; heard: string; score: number } {
+  const t = normalize(target).replace(/\s/g, '')
+  let best = { ok: false, heard: heardList[0] ?? '', score: 0 }
+  for (const h of heardList) {
+    const candidate = h
+      .split(/[\s.,\-_]+/)
+      .map(tokenToLetter)
+      .join('')
+    const c = normalize(candidate).replace(/\s/g, '')
+    if (!c) continue
+    const dist = levenshtein(c, t)
+    const score = 1 - dist / Math.max(t.length, c.length, 1)
+    const ok = c === t || (t.length >= 6 && dist <= 1)
+    if (ok) return { ok: true, heard: h, score }
+    if (score > best.score) best = { ok: false, heard: h, score }
+  }
+  return best
+}
+
 // Compara lo que se escuchó contra la palabra objetivo. Devuelve si coincide.
 export function comparePronunciation(
   heardList: string[],
