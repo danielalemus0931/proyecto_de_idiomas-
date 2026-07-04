@@ -5,13 +5,14 @@ import { generateWordSearch } from '../../utils/wordSearchGenerator'
 
 type Props = {
   items: VocabularyItem[]
+  wordCount?: number
   onComplete?: () => void
 }
 
 type Cell = { row: number; col: number }
 
-export default function WordSearch({ items, onComplete }: Props) {
-  const words = useMemo(() => getActivityWords(items, 6), [items])
+export default function WordSearch({ items, wordCount = 6, onComplete }: Props) {
+  const words = useMemo(() => getActivityWords(items, wordCount), [items, wordCount])
   const puzzle = useMemo(() => generateWordSearch(words), [words])
   const [found, setFound] = useState<Set<string>>(new Set())
   const [selecting, setSelecting] = useState(false)

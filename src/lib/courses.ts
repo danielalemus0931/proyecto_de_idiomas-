@@ -62,14 +62,14 @@ export function isLevelAvailableForGrade(levelOrder: number, grade: StudentGrade
 }
 
 export function quizPassThreshold(grade: StudentGrade): number {
-  if (grade === 8) return 0.6
-  if (grade === 9) return 0.65
-  if (grade === 10) return 0.7
-  return 0.75
+  if (grade === 8) return 0.65
+  if (grade === 9) return 0.7
+  if (grade === 10) return 0.75
+  return 0.8
 }
 
 export function questionCountForGrade(grade: StudentGrade): number {
-  if (grade === 8) return 3
-  if (grade === 9) return 4
-  return 5
+  if (grade === 8) return 4
+  if (grade === 9) return 5
+  return 6
 }

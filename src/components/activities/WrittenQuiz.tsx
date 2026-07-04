@@ -49,37 +49,54 @@ export default function WrittenQuiz({
       <header className="written-quiz-header">
         <h3>Quiz escrito</h3>
         <p className="written-quiz-meta">
-          Curso {grade}° · {questions.length} preguntas · Necesitas{' '}
-          {Math.ceil(threshold * 100)}% para aprobar
+          Curso {grade}° · {questions.length} preguntas nuevas (no repetidas de gramática, vocabulario ni
+          juegos) · Necesitas {Math.ceil(threshold * 100)}% para aprobar
         </p>
       </header>
 
       <div className="written-quiz-questions">
         {questions.map((q, index) => {
           const ok = verified ? results[q.id] : undefined
+          const promptLines = q.prompt.split('\n')
+          const sentenceLine = promptLines[promptLines.length - 1]
+          const headerLines = promptLines.slice(0, -1).filter(Boolean)
           return (
             <div
               key={q.id}
               className={`written-question ${verified ? (ok ? 'correct' : 'incorrect') : ''}`}
             >
-              <label htmlFor={q.id}>
+              <div className="written-question-header">
                 <span className="written-question-num">{index + 1}.</span>
                 <span className="written-question-kind">{kindLabel(q.kind)}</span>
-                {q.prompt}
+              </div>
+              {headerLines.map((line) => (
+                <p key={line} className="written-question-meta-line">
+                  {line}
+                </p>
+              ))}
+              <p className="written-question-sentence">{sentenceLine}</p>
+              <label className="sr-only" htmlFor={q.id}>
+                Tu respuesta
               </label>
-              {q.hint && <p className="written-question-hint">{q.hint}</p>}
               <textarea
                 id={q.id}
                 className="written-answer-input"
-                rows={2}
-                placeholder="Escribe tu respuesta aquí…"
+                rows={q.minWords && q.minWords >= 7 ? 3 : 2}
+                placeholder="Escribe la traducción completa…"
                 value={answers[q.id] ?? ''}
                 disabled={verified && passed}
                 onChange={(e) => handleChange(q.id, e.target.value)}
               />
               {verified && (
                 <p className={`written-question-feedback ${ok ? 'success' : 'error'}`}>
-                  {ok ? '✓ Correcto' : '✗ Revisa'} — {q.explanation}
+                  {ok ? '✓ Correcto' : '✗ Revisa tu traducción'}
+                  {!ok && q.modelAnswer && (
+                    <>
+                      {' '}
+                      — Respuesta esperada: <strong>{q.modelAnswer}</strong>
+                    </>
+                  )}
+                  {ok && q.modelAnswer && <> — {q.explanation}</>}
                 </p>
               )}
             </div>

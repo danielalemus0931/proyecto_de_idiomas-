@@ -6,13 +6,19 @@ import { speak } from '../../lib/speech'
 type Props = {
   items: VocabularyItem[]
   speechLang: string
+  pairCount?: number
   onComplete?: () => void
 }
 
-export default function MatchingGame({ items, speechLang, onComplete }: Props) {
+export default function MatchingGame({ items, speechLang, pairCount = 6, onComplete }: Props) {
   const pairs = useMemo(
-    () => items.slice(0, 6).map((item) => ({ id: item.word, word: item.word, translation: item.translation })),
-    [items],
+    () =>
+      items.slice(0, pairCount).map((item) => ({
+        id: item.word,
+        word: item.word,
+        translation: item.translation,
+      })),
+    [items, pairCount],
   )
 
   const shuffledWords = useMemo(() => shuffle(pairs.map((p) => p.word)), [pairs])

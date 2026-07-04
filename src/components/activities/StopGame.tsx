@@ -19,6 +19,8 @@ type Props = {
   languageId: string
   languageName: string
   currentUser: User
+  embedded?: boolean
+  onComplete?: () => void
 }
 
 type Phase = 'ready' | 'playing' | 'finished'
@@ -54,7 +56,13 @@ function saveLocalScore(
   }
 }
 
-export default function StopGame({ languageId, languageName, currentUser }: Props) {
+export default function StopGame({
+  languageId,
+  languageName,
+  currentUser,
+  embedded = false,
+  onComplete,
+}: Props) {
   const letter = useMemo(() => getDailyLetter(languageId), [languageId])
   const [phase, setPhase] = useState<Phase>('ready')
   const [timeLeft, setTimeLeft] = useState(STOP_TIME_SECONDS)
@@ -120,7 +128,8 @@ export default function StopGame({ languageId, languageName, currentUser }: Prop
       await loadLeaderboard()
     }
     setSubmitting(false)
-  }, [submitted, timeLeft, answers, letter, currentUser, languageId, loadLeaderboard])
+    onComplete?.()
+  }, [submitted, timeLeft, answers, letter, currentUser, languageId, loadLeaderboard, onComplete])
 
   useEffect(() => {
     if (phase !== 'playing') return undefined
@@ -152,10 +161,10 @@ export default function StopGame({ languageId, languageName, currentUser }: Prop
     phase === 'finished' ? scoreStopAnswers(answers, letter, timeLeft) : null
 
   return (
-    <div className="stop-game">
+    <div className={`stop-game ${embedded ? 'stop-game--embedded' : ''}`}>
       <header className="stop-header">
-        <span className="stop-badge">Competitivo · {languageName}</span>
-        <h2>Stop — Tutti frutti</h2>
+        <span className="stop-badge">Competitivo · {languageName} · 1:00</span>
+        <h2>{embedded ? 'Stop — dentro de la lección' : 'Stop — Tutti frutti'}</h2>
         <p className="activity-hint">{languageInputHint(languageId)}</p>
       </header>
 
@@ -169,8 +178,13 @@ export default function StopGame({ languageId, languageName, currentUser }: Prop
         <section className="stop-section">
           <h3>Reglas</h3>
           <ul className="stop-rules">
-            <li>Tienes <strong>{STOP_TIME_SECONDS} segundos</strong> para completar las categorías.</li>
+            <li>
+              Tienes <strong>1 minuto ({STOP_TIME_SECONDS}s)</strong> para completar las categorías.
+            </li>
             <li>Cada respuesta debe empezar con la letra <strong>{letter}</strong>.</li>
+            <li>
+              Categorías: palabra, país, color, animal, alimento y objeto.
+            </li>
             <li>Ganas <strong>{POINTS_PER_CATEGORY} pts</strong> por categoría válida + segundos restantes.</li>
             <li>Tu puntuación compite en el ranking de {languageName} de hoy.</li>
           </ul>
@@ -198,7 +212,10 @@ export default function StopGame({ languageId, languageName, currentUser }: Prop
           >
             {STOP_CATEGORIES.map((cat) => (
               <label key={cat.id} className="stop-field">
-                <span>{cat.label}</span>
+                <span className="stop-field-label">
+                  <span className="stop-field-icon" aria-hidden="true">{cat.icon}</span>
+                  {cat.label}
+                </span>
                 <input
                   type="text"
                   value={answers[cat.id]}

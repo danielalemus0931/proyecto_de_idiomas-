@@ -60,6 +60,7 @@ export type LessonActivityId =
   | 'crossword'
   | 'matching'
   | 'scramble'
+  | 'stop'
 
 export type WrittenQuizQuestion = {
   id: string
@@ -68,6 +69,14 @@ export type WrittenQuizQuestion = {
   hint?: string
   acceptableAnswers: string[]
   explanation: string
+  /** Palabras que la respuesta debe incluir (coherencia con la consigna). */
+  requiredTerms?: string[]
+  /** Mínimo de palabras en la respuesta del estudiante. */
+  minWords?: number
+  /** Respuesta modelo mostrada al corregir. */
+  modelAnswer?: string
+  /** Indicación breve sobre la tarea (sin revelar la respuesta). */
+  instruction?: string
 }
 
 // Roles: 'staff' agrupa a docentes y administrativos (mismo rol).

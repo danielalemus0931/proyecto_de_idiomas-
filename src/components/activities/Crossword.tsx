@@ -4,11 +4,12 @@ import { generateCrossword } from '../../utils/crosswordGenerator'
 
 type Props = {
   items: VocabularyItem[]
+  clueCount?: number
   onComplete?: () => void
 }
 
-export default function Crossword({ items, onComplete }: Props) {
-  const puzzle = useMemo(() => generateCrossword(items, 5), [items])
+export default function Crossword({ items, clueCount = 5, onComplete }: Props) {
+  const puzzle = useMemo(() => generateCrossword(items, clueCount), [items, clueCount])
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [checked, setChecked] = useState(false)
 

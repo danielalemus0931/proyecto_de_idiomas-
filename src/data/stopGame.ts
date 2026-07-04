@@ -1,16 +1,16 @@
 export type StopCategoryId =
-  | 'nombre'
-  | 'animal'
+  | 'letra'
   | 'pais'
-  | 'cosa'
-  | 'alimento'
   | 'color'
-  | 'verbo'
+  | 'animal'
+  | 'alimento'
+  | 'objeto'
 
 export type StopCategory = {
   id: StopCategoryId
   label: string
   placeholder: string
+  icon: string
 }
 
 export type StopAnswers = Record<StopCategoryId, string>
@@ -24,15 +24,14 @@ export type StopScoreEntry = {
   created_at?: string
 }
 
-export const STOP_TIME_SECONDS = 90
+export const STOP_TIME_SECONDS = 60
 export const POINTS_PER_CATEGORY = 100
 
 export const STOP_CATEGORIES: StopCategory[] = [
-  { id: 'nombre', label: 'Nombre', placeholder: 'Un nombre propio' },
-  { id: 'animal', label: 'Animal', placeholder: 'Ej: cat, chat, gato…' },
-  { id: 'pais', label: 'País', placeholder: 'Ej: Canada, Chile…' },
-  { id: 'cosa', label: 'Cosa', placeholder: 'Un objeto o cosa' },
-  { id: 'alimento', label: 'Alimento', placeholder: 'Comida o bebida' },
-  { id: 'color', label: 'Color', placeholder: 'Ej: blue, rouge…' },
-  { id: 'verbo', label: 'Verbo', placeholder: 'Una acción' },
+  { id: 'letra', label: 'Palabra', placeholder: 'Una palabra con la letra del día', icon: '🔤' },
+  { id: 'pais', label: 'País', placeholder: 'Ej: Canada, Chile, France…', icon: '🌍' },
+  { id: 'color', label: 'Color', placeholder: 'Ej: blue, rouge, rojo…', icon: '🎨' },
+  { id: 'animal', label: 'Animal', placeholder: 'Ej: cat, perro, chat…', icon: '🐾' },
+  { id: 'alimento', label: 'Alimento', placeholder: 'Comida o bebida', icon: '🍎' },
+  { id: 'objeto', label: 'Objeto', placeholder: 'Un objeto cotidiano', icon: '📦' },
 ]

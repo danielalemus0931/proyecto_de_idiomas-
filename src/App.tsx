@@ -38,6 +38,8 @@ import type { AvatarConfig, Gender, LanguageLevel, Role, StudentGrade, User, Les
 
 import {
   countCompletedInLanguage,
+  getActivitiesForLesson,
+  getActivitiesForLevel,
   getCompletedActivities,
   isLessonCompleted,
   isLessonUnlocked,
@@ -820,7 +822,7 @@ function App() {
 
               <p>
 
-                90 segundos · compite con otros estudiantes de {selectedLanguage.name}.
+                1 minuto · letra, país, color, animal, alimento y objeto. Compite con otros estudiantes de {selectedLanguage.name}.
 
               </p>
 
@@ -898,6 +900,12 @@ function App() {
 
                       {level.difficulty} · {level.description}
 
+                      <span className="level-activities-hint">
+
+                        {' '}· {getActivitiesForLevel(level.id).length} actividades por lección (quiz y stop incluidos)
+
+                      </span>
+
                     </p>
 
                   </div>
@@ -916,7 +924,7 @@ function App() {
 
                   <p className="level-lock-hint">
 
-                    Completa las 7 actividades de cada lección del nivel anterior para desbloquear
+                    Completa las actividades de cada lección del nivel anterior para desbloquear
 
                     este nivel.
 
@@ -1000,7 +1008,7 @@ function App() {
 
                                 ? `${actProgress.completed}/${actProgress.total} actividades`
 
-                                : '7 actividades'}
+                                : `${getActivitiesForLesson(lesson.id, lesson.levelId).length} actividades`}
 
                             </span>
 
@@ -1124,11 +1132,18 @@ function App() {
 
             key={`${selectedLessonId}-${activeGrade}-${progressTick}`}
 
+            lessonId={selectedLessonId ?? currentLesson.id}
+            levelId={currentLesson.levelId}
             lessonWords={lessonWords}
             grammarBlocks={grammarBlocks}
             quizQuestions={writtenQuiz}
             studentGrade={activeGrade}
             speechLang={LANG_BCP47[selectedLanguage.id] ?? 'en-US'}
+            lessonTopic={currentLesson.topic}
+            lessonTitle={currentLesson.title}
+            languageId={selectedLanguage.id}
+            languageName={selectedLanguage.name}
+            currentUser={currentUser}
             completedActivities={lessonCompletedActivities}
             lessonCompleted={
               !!(
