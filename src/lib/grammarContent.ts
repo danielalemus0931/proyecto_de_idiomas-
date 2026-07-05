@@ -510,8 +510,10 @@ export function getGrammarForLesson(
   grade: StudentGrade,
 ): GrammarBlock[] {
   const levelOrder = levelOrderFromLesson(lesson)
-  const basePack = PACKS[languageId]?.[levelOrder] ?? PACKS.en[levelOrder] ?? PACKS.en[1]
-  const extras = EXTRA_BLOCKS[languageId]?.[levelOrder] ?? EXTRA_BLOCKS.en?.[levelOrder] ?? []
+  const basePack =
+    PACKS[languageId]?.[levelOrder] ??
+    (languageId === 'en' ? PACKS.en[levelOrder] ?? PACKS.en[1] : [])
+  const extras = EXTRA_BLOCKS[languageId]?.[levelOrder] ?? []
   const rawBlocks: RawGrammarBlock[] = [
     ...basePack,
     ...extras,

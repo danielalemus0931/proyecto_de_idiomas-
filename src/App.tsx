@@ -902,7 +902,7 @@ function App() {
 
                       <span className="level-activities-hint">
 
-                        {' '}· {getActivitiesForLevel(level.id).length} actividades por lección (quiz y stop incluidos)
+                        {' '}· {getActivitiesForLevel(level.id).length} actividades por lección (gramática, quiz y stop incluidos)
 
                       </span>
 

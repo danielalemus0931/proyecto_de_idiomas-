@@ -197,19 +197,62 @@ export function enrichGrammarBlocks(
   }))
 }
 
+const TOPIC_CONNECTORS: Record<string, { pattern: string; connectors: string; examples: { phrase: string; translation: string }[] }> = {
+  en: {
+    pattern: 'Subject + verb + complement + (and / but / because)',
+    connectors: 'and, but, because',
+    examples: [
+      { phrase: 'I like {topic} and I practice every day.', translation: 'Me gusta {topic} y practico cada día.' },
+      { phrase: 'She talks about {topic}, but she is shy.', translation: 'Habla de {topic}, pero es tímida.' },
+      { phrase: 'We study {topic} because it is useful.', translation: 'Estudiamos {topic} porque es útil.' },
+      { phrase: 'They always use {topic} in class.', translation: 'Siempre usan {topic} en clase.' },
+    ],
+  },
+  fr: {
+    pattern: 'Sujet + verbe + complément + (et / mais / parce que)',
+    connectors: 'et, mais, parce que',
+    examples: [
+      { phrase: "J'aime {topic} et je pratique chaque jour.", translation: 'Me gusta {topic} y practico cada día.' },
+      { phrase: 'Elle parle de {topic}, mais elle est timide.', translation: 'Habla de {topic}, pero es tímida.' },
+      { phrase: 'Nous étudions {topic} parce que c\'est utile.', translation: 'Estudiamos {topic} porque es útil.' },
+      { phrase: 'Ils utilisent toujours {topic} en classe.', translation: 'Siempre usan {topic} en clase.' },
+    ],
+  },
+  pt: {
+    pattern: 'Sujeito + verbo + complemento + (e / mas / porque)',
+    connectors: 'e, mas, porque',
+    examples: [
+      { phrase: 'Eu gosto de {topic} e pratico todos os dias.', translation: 'Me gusta {topic} y practico cada día.' },
+      { phrase: 'Ela fala sobre {topic}, mas é tímida.', translation: 'Habla de {topic}, pero es tímida.' },
+      { phrase: 'Nós estudamos {topic} porque é útil.', translation: 'Estudiamos {topic} porque es útil.' },
+      { phrase: 'Eles sempre usam {topic} na aula.', translation: 'Siempre usan {topic} en clase.' },
+    ],
+  },
+  it: {
+    pattern: 'Soggetto + verbo + complemento + (e / ma / perché)',
+    connectors: 'e, ma, perché',
+    examples: [
+      { phrase: 'Mi piace {topic} e pratico ogni giorno.', translation: 'Me gusta {topic} y practico cada día.' },
+      { phrase: 'Lei parla di {topic}, ma è timida.', translation: 'Habla de {topic}, pero es tímida.' },
+      { phrase: 'Studiamo {topic} perché è utile.', translation: 'Estudiamos {topic} porque es útil.' },
+      { phrase: 'Usano sempre {topic} in classe.', translation: 'Siempre usan {topic} en clase.' },
+    ],
+  },
+}
+
 export function topicContextBlock(lessonTitle: string, topic: string, languageId: string): RawGrammarBlock {
   const lang = LANG_LABEL[languageId] ?? 'el idioma'
+  const ctx = TOPIC_CONNECTORS[languageId] ?? TOPIC_CONNECTORS.en
+  const topicLabel = topic || lessonTitle
   return {
-    title: `Aplicación: ${topic}`,
+    title: `Aplicación: ${topicLabel}`,
     kind: 'structure',
     explanation: `Integra el vocabulario de "${lessonTitle}" en oraciones completas en ${lang}.`,
-    pattern: 'Sujeto + verbo + complemento + (adverbio/lugar)',
-    examples: [
-      { phrase: '…', translation: 'Combina al menos dos palabras de la lección.' },
-      { phrase: '…', translation: 'Usa conectores simples: and, but, because.' },
-      { phrase: '…', translation: 'Añade un adverbio de tiempo si es posible.' },
-      { phrase: '…', translation: 'Lee tu oración en voz alta para verificar el orden.' },
-    ],
-    practice: `Escribe 2 oraciones sobre ${topic} usando vocabulario de la lección.`,
+    pattern: ctx.pattern,
+    examples: ctx.examples.map((ex) => ({
+      phrase: ex.phrase.replace(/\{topic\}/g, topicLabel),
+      translation: ex.translation.replace(/\{topic\}/g, topicLabel),
+    })),
+    practice: `Escribe 2 oraciones sobre ${topicLabel} usando conectores (${ctx.connectors}) y vocabulario de la lección.`,
   }
 }
