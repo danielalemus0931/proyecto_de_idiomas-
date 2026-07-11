@@ -1,8 +1,14 @@
 import { useState } from 'react'
+import BrandLogo from './BrandLogo'
 import { supabase } from '../lib/supabase'
-import type { Gender, Role } from '../types'
+import { DEMO_USER, DEMO_USER_MALE, startDemoSession } from '../lib/demoAuth'
+import type { Gender, Role, User } from '../types'
 
-function Login() {
+type Props = {
+  onDemoLogin?: () => void
+}
+
+function Login({ onDemoLogin }: Props) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -12,6 +18,11 @@ function Login() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const handleDemoLogin = (user: User = DEMO_USER) => {
+    startDemoSession(user)
+    onDemoLogin?.()
+  }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -25,7 +36,6 @@ function Login() {
         password,
       })
       if (error) setError(traducirError(error.message))
-      // Si va bien, App detecta la sesión automáticamente.
     } else {
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
@@ -35,7 +45,7 @@ function Login() {
       if (error) {
         setError(traducirError(error.message))
       } else if (data.session) {
-        // Sesión inmediata (confirmación de correo desactivada): App entra solo.
+        // Sesión inmediata
       } else {
         setInfo('Cuenta creada. Revisa tu correo para confirmarla y luego inicia sesión.')
         setMode('signin')
@@ -48,11 +58,8 @@ function Login() {
   return (
     <div className="login-screen">
       <div className="login-card">
-        <div className="logo">
-          <span className="logo-icon" aria-hidden="true">
-            🌍
-          </span>
-          Langflow
+        <div className="logo logo--image">
+          <BrandLogo size="lg" />
         </div>
         <h1>{mode === 'signin' ? 'Iniciar sesión' : 'Crear cuenta'}</h1>
         <p className="login-subtitle">
@@ -129,6 +136,21 @@ function Login() {
 
         <button
           type="button"
+          className="login-button login-button--demo"
+          onClick={() => handleDemoLogin(DEMO_USER)}
+        >
+          Entrar como Daniela (demo · mujer)
+        </button>
+        <button
+          type="button"
+          className="login-button login-button--demo"
+          onClick={() => handleDemoLogin(DEMO_USER_MALE)}
+        >
+          Entrar como Mateo (demo · hombre)
+        </button>
+
+        <button
+          type="button"
           className="login-toggle"
           onClick={() => {
             setMode(mode === 'signin' ? 'signup' : 'signin')
@@ -149,6 +171,9 @@ function traducirError(message: string): string {
   if (message.includes('Invalid login credentials')) return 'Correo o contraseña incorrectos.'
   if (message.includes('already registered')) return 'Ese correo ya está registrado.'
   if (message.includes('at least 6')) return 'La contraseña debe tener al menos 6 caracteres.'
+  if (message.toLowerCase().includes('email not confirmed')) {
+    return 'Debes confirmar el correo o desactivar “Confirm email” en Supabase (Authentication → Providers → Email).'
+  }
   return message
 }
 

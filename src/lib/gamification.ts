@@ -3,7 +3,11 @@
 export const POINTS_PER_CORRECT = 10
 
 // Puntos acumulados necesarios para cada nivel (índice 0 => nivel 1).
-export const LEVEL_THRESHOLDS = [0, 40, 100, 180, 280, 400]
+// Escala extendida para progresión del avatar (hasta 25+).
+export const LEVEL_THRESHOLDS = [
+  0, 40, 100, 180, 280, 400, 550, 720, 920, 1150, 1400, 1700, 2050, 2450, 2900, 3400, 4000, 4700,
+  5500, 6400, 7400, 8600, 10000, 11600, 13400,
+]
 export const MAX_LEVEL = LEVEL_THRESHOLDS.length
 
 export function levelFromPoints(points: number): number {

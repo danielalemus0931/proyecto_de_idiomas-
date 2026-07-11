@@ -1,16 +1,32 @@
-import type { AvatarConfig } from '../types'
+import type { AvatarConfig, Gender } from '../types'
 
 // Avatar de cuerpo entero dibujado con SVG (estilo caricatura).
 // viewBox 240x380. Capas de atrás hacia adelante.
 
-type Props = { config: AvatarConfig; size?: number; showBackground?: boolean }
+type Props = {
+  config: AvatarConfig
+  size?: number
+  showBackground?: boolean
+  gender?: Gender
+}
 
 const OUTLINE = '#3a2e2e'
 
-export default function BodyAvatar({ config, size = 240, showBackground = true }: Props) {
+export default function BodyAvatar({
+  config,
+  size = 240,
+  showBackground = true,
+  gender = 'female',
+}: Props) {
   const { skin, hair, hairColor, top, topColor, bottom, bottomColor, shoes, shoesColor } = config
   const isDress = top === 'dress'
   const darker = shade(topColor, -18)
+  const isMale = gender === 'male'
+  // Proporciones distintas: hombre más ancho de hombros; mujer silueta más suave.
+  const shoulder = isMale ? 78 : 82
+  const hip = isMale ? 86 : 90
+  const headR = isMale ? 56 : 58
+  const jawY = isMale ? 118 : 116
 
   return (
     <svg
@@ -18,10 +34,19 @@ export default function BodyAvatar({ config, size = 240, showBackground = true }
       width={size}
       height={(size * 380) / 240}
       role="img"
-      aria-label="Avatar"
+      aria-label={isMale ? 'Avatar masculino' : 'Avatar femenino'}
       style={{ display: 'block' }}
     >
-      {showBackground && <rect x="0" y="0" width="240" height="380" rx="24" fill={config.background} />}
+      {showBackground && (
+        <g>
+          <rect x="0" y="0" width="240" height="380" rx="24" fill={config.background} />
+          {/* Decoración tipo estudio (estrellas / destellos) */}
+          <circle cx="28" cy="40" r="3" fill="#ffffff" opacity="0.7" />
+          <circle cx="210" cy="56" r="2.5" fill="#ffffff" opacity="0.65" />
+          <path d="M200,28 l3,7 l7,3 l-7,3 l-3,7 l-3,-7 l-7,-3 l7,-3 Z" fill="#ffffff" opacity="0.55" />
+          <path d="M36,70 l2,5 l5,2 l-5,2 l-2,5 l-2,-5 l-5,-2 l5,-2 Z" fill="#ffffff" opacity="0.45" />
+        </g>
+      )}
 
       {/* Alas detrás del cuerpo (recompensa máxima, bien visibles) */}
       {config.accessory === 'wings' && (
@@ -40,33 +65,71 @@ export default function BodyAvatar({ config, size = 240, showBackground = true }
       )}
 
       {/* Piernas (piel) */}
-      <line x1="106" y1="264" x2="106" y2="338" stroke={skin} strokeWidth="24" strokeLinecap="round" />
-      <line x1="134" y1="264" x2="134" y2="338" stroke={skin} strokeWidth="24" strokeLinecap="round" />
+      <line
+        x1={isMale ? 104 : 106}
+        y1="264"
+        x2={isMale ? 104 : 106}
+        y2="338"
+        stroke={skin}
+        strokeWidth={isMale ? 26 : 24}
+        strokeLinecap="round"
+      />
+      <line
+        x1={isMale ? 136 : 134}
+        y1="264"
+        x2={isMale ? 136 : 134}
+        y2="338"
+        stroke={skin}
+        strokeWidth={isMale ? 26 : 24}
+        strokeLinecap="round"
+      />
 
       {/* Ropa inferior (si no es vestido) */}
-      {!isDress && renderBottom(bottom, bottomColor)}
+      {!isDress && renderBottom(bottom, bottomColor, isMale)}
 
       {/* Zapatos */}
       {renderShoes(shoes, shoesColor)}
 
       {/* Brazos (piel) */}
-      <line x1="80" y1="200" x2="62" y2="256" stroke={skin} strokeWidth="20" strokeLinecap="round" />
-      <line x1="160" y1="200" x2="178" y2="256" stroke={skin} strokeWidth="20" strokeLinecap="round" />
+      <line
+        x1={shoulder}
+        y1="200"
+        x2={isMale ? 56 : 62}
+        y2="256"
+        stroke={skin}
+        strokeWidth={isMale ? 22 : 20}
+        strokeLinecap="round"
+      />
+      <line
+        x1={240 - shoulder}
+        y1="200"
+        x2={isMale ? 184 : 178}
+        y2="256"
+        stroke={skin}
+        strokeWidth={isMale ? 22 : 20}
+        strokeLinecap="round"
+      />
 
       {/* Ropa superior */}
-      {isDress ? renderDress(topColor, darker) : renderTop(top, topColor, darker)}
+      {isDress
+        ? renderDress(topColor, darker)
+        : renderTop(top, topColor, darker, isMale, shoulder, hip)}
 
       {/* Cabello (parte trasera) — DETRÁS de la cabeza */}
       {renderHairBack(hair, hairColor)}
 
       {/* Cuello + cabeza + orejas (piel) */}
-      <rect x="108" y="156" width="24" height="36" rx="10" fill={skin} />
-      <circle cx="66" cy="120" r="10" fill={skin} />
-      <circle cx="174" cy="120" r="10" fill={skin} />
-      <circle cx="120" cy="116" r="58" fill={skin} />
+      <rect x={isMale ? 106 : 108} y="156" width={isMale ? 28 : 24} height="36" rx="10" fill={skin} />
+      <circle cx={isMale ? 64 : 66} cy={jawY} r={isMale ? 11 : 10} fill={skin} />
+      <circle cx={isMale ? 176 : 174} cy={jawY} r={isMale ? 11 : 10} fill={skin} />
+      <circle cx="120" cy={jawY} r={headR} fill={skin} />
+      {/* Mentón un poco más marcado en hombre */}
+      {isMale && (
+        <ellipse cx="120" cy="158" rx="22" ry="14" fill={skin} />
+      )}
 
       {/* Cara (emoción completa: cejas + ojos + boca + detalles) */}
-      {renderExpression(config.expression)}
+      {renderExpression(config.expression, isMale)}
 
       {/* Cabello (parte frontal) */}
       {renderHairFront(hair, hairColor)}
@@ -78,16 +141,19 @@ export default function BodyAvatar({ config, size = 240, showBackground = true }
 }
 
 /* ------------------------- Ropa inferior ------------------------- */
-function renderBottom(style: string, color: string) {
+function renderBottom(style: string, color: string, isMale = false) {
   if (style === 'skirt') {
     return <path d="M92,262 L148,262 L166,312 L74,312 Z" fill={color} stroke={OUTLINE} strokeWidth="1.5" />
   }
   const legBottom = style === 'shorts' ? 300 : 336
+  const legW = isMale ? 26 : 24
+  const leftX = isMale ? 104 : 106
+  const rightX = isMale ? 136 : 134
   return (
     <g stroke={OUTLINE} strokeWidth="1.5">
-      <rect x="92" y="256" width="56" height="34" rx="12" fill={color} />
-      <line x1="106" y1="278" x2="106" y2={legBottom} stroke={color} strokeWidth="24" strokeLinecap="round" />
-      <line x1="134" y1="278" x2="134" y2={legBottom} stroke={color} strokeWidth="24" strokeLinecap="round" />
+      <rect x={isMale ? 88 : 92} y="256" width={isMale ? 64 : 56} height="34" rx="12" fill={color} />
+      <line x1={leftX} y1="278" x2={leftX} y2={legBottom} stroke={color} strokeWidth={legW} strokeLinecap="round" />
+      <line x1={rightX} y1="278" x2={rightX} y2={legBottom} stroke={color} strokeWidth={legW} strokeLinecap="round" />
     </g>
   )
 }
@@ -147,31 +213,36 @@ function renderShoes(style: string, color: string) {
 }
 
 /* ------------------------- Ropa superior ------------------------- */
-// Torso entallado con hombros y cintura ligera.
-function torsoPath(color: string) {
+function torsoPath(color: string, shoulder: number, hip: number) {
   return (
     <path
-      d="M80,196 Q120,190 160,196 L157,260 Q154,272 120,274 Q86,272 83,260 Z"
+      d={`M${shoulder},196 Q120,190 ${240 - shoulder},196 L${240 - hip},260 Q${240 - hip + 3},272 120,274 Q${hip - 3},272 ${hip},260 Z`}
       fill={color}
       stroke={OUTLINE}
       strokeWidth="1.5"
     />
   )
 }
-function sleeves(color: string) {
+function sleeves(color: string, shoulder: number) {
   return (
     <g stroke={OUTLINE} strokeWidth="1.5">
-      <path d="M80,197 Q64,200 60,220 Q74,218 84,206 Z" fill={color} />
-      <path d="M160,197 Q176,200 180,220 Q166,218 156,206 Z" fill={color} />
+      <path d={`M${shoulder},197 Q${shoulder - 16},200 ${shoulder - 20},220 Q${shoulder - 6},218 ${shoulder + 4},206 Z`} fill={color} />
+      <path d={`M${240 - shoulder},197 Q${240 - shoulder + 16},200 ${240 - shoulder + 20},220 Q${240 - shoulder + 6},218 ${240 - shoulder - 4},206 Z`} fill={color} />
     </g>
   )
 }
 
-function renderTop(style: string, color: string, darker: string) {
+function renderTop(
+  style: string,
+  color: string,
+  darker: string,
+  isMale: boolean,
+  shoulder: number,
+  hip: number,
+) {
   if (style === 'tank') {
     return (
       <g stroke={OUTLINE} strokeWidth="1.5">
-        {/* tirantes */}
         <path d="M100,192 L104,214 L98,216 L94,196 Z" fill={color} />
         <path d="M140,192 L136,214 L142,216 L146,196 Z" fill={color} />
         <path d="M88,208 Q120,200 152,208 L155,260 Q152,272 120,274 Q88,272 85,260 Z" fill={color} />
@@ -180,11 +251,49 @@ function renderTop(style: string, color: string, darker: string) {
     )
   }
 
+  if (style === 'cardigan') {
+    return (
+      <g>
+        {sleeves(color, shoulder)}
+        {torsoPath('#ffffff', shoulder + 4, hip + 2)}
+        <path
+          d={`M${shoulder},196 Q120,190 ${240 - shoulder},196 L${240 - hip},268 Q120,276 ${hip},268 Z`}
+          fill={color}
+          opacity="0.95"
+          stroke={OUTLINE}
+          strokeWidth="1.5"
+        />
+        <line x1="120" y1="200" x2="120" y2="268" stroke={darker} strokeWidth="3" />
+        <path d="M104,196 Q120,208 136,196" fill="none" stroke="#e9ecef" strokeWidth="3" />
+      </g>
+    )
+  }
+
+  if (style === 'denim') {
+    const denim = '#3b5bdb'
+    const denimDark = '#364fc7'
+    return (
+      <g>
+        {sleeves(denim, shoulder)}
+        {torsoPath(color, shoulder + 2, hip)}
+        <path
+          d={`M${shoulder},196 Q120,190 ${240 - shoulder},196 L${240 - hip},266 Q120,274 ${hip},266 Z`}
+          fill={denim}
+          opacity="0.92"
+          stroke={OUTLINE}
+          strokeWidth="1.5"
+        />
+        <line x1="120" y1="206" x2="120" y2="266" stroke={denimDark} strokeWidth="3" />
+        <rect x="96" y="228" width="14" height="18" rx="3" fill={denimDark} />
+        <rect x="130" y="228" width="14" height="18" rx="3" fill={denimDark} />
+      </g>
+    )
+  }
+
   return (
     <g>
-      {sleeves(color)}
-      {torsoPath(color)}
-      {/* cuello redondo */}
+      {sleeves(color, shoulder)}
+      {torsoPath(color, shoulder, hip)}
       <path d="M104,196 Q120,208 136,196" fill="none" stroke={darker} strokeWidth="3" />
 
       {style === 'striped' && (
@@ -197,26 +306,24 @@ function renderTop(style: string, color: string, darker: string) {
 
       {style === 'hoodie' && (
         <g stroke={OUTLINE} strokeWidth="1.5">
-          {/* capucha */}
           <path d="M96,190 Q120,210 144,190 Q150,198 146,208 Q120,222 94,208 Q90,198 96,190 Z" fill={darker} />
-          {/* cordones */}
           <line x1="114" y1="212" x2="112" y2="240" stroke="#ffffff" strokeWidth="3" />
           <line x1="126" y1="212" x2="128" y2="240" stroke="#ffffff" strokeWidth="3" />
-          {/* bolsillo canguro */}
           <path d="M96,242 L144,242 L140,260 L100,260 Z" fill={darker} />
         </g>
       )}
 
       {style === 'jacket' && (
         <g stroke={OUTLINE} strokeWidth="1.5">
-          {/* cuello bomber */}
           <path d="M98,198 L120,208 L142,198 L138,206 L120,216 L102,206 Z" fill={darker} />
-          {/* cremallera */}
           <line x1="120" y1="208" x2="120" y2="266" stroke={darker} strokeWidth="4" />
           <circle cx="120" cy="212" r="2.4" fill="#ffffff" />
-          {/* puño / dobladillo elástico */}
           <rect x="84" y="260" width="72" height="8" rx="3" fill={darker} />
         </g>
+      )}
+
+      {isMale && style === 'tshirt' && (
+        <path d="M110,230 Q120,238 130,230" fill="none" stroke={darker} strokeWidth="2" opacity="0.4" />
       )}
     </g>
   )
@@ -225,13 +332,10 @@ function renderTop(style: string, color: string, darker: string) {
 function renderDress(color: string, darker: string) {
   return (
     <g stroke={OUTLINE} strokeWidth="1.5">
-      {sleeves(color)}
-      {/* corpiño entallado + falda acampanada */}
+      {sleeves(color, 82)}
       <path d="M82,196 Q120,190 158,196 L156,238 L184,300 Q120,320 56,300 L84,238 Z" fill={color} />
       <path d="M104,196 Q120,208 136,196" fill="none" stroke={darker} strokeWidth="3" />
-      {/* cinturón */}
       <rect x="84" y="236" width="72" height="7" rx="2" fill={darker} />
-      {/* borde inferior */}
       <path d="M56,300 Q120,320 184,300 L181,308 Q120,328 59,308 Z" fill={darker} />
     </g>
   )
@@ -242,6 +346,7 @@ function renderHairBack(style: string, color: string) {
   // Corona trasera (queda oculta tras la cabeza) + mechones a los lados.
   const crown = <path d="M58,110 Q120,66 182,110 L182,138 Q120,116 58,138 Z" fill={color} />
   switch (style) {
+    case 'longWavy':
     case 'longStraight':
       return (
         <g fill={color}>
@@ -294,6 +399,8 @@ function renderHairFront(style: string, color: string) {
   // Base que cubre la coronilla (evita el aspecto de "gorro" delgado).
   const cap = <path d="M60,110 Q58,54 120,50 Q182,54 180,110 Q178,90 120,94 Q62,90 60,110 Z" fill={color} />
   switch (style) {
+    case 'longWavy':
+    case 'bangs':
     case 'longStraight':
       return (
         <g fill={color}>
@@ -344,6 +451,7 @@ function renderHairFront(style: string, color: string) {
         </g>
       )
     case 'sidePart':
+    case 'slick':
       return (
         <g fill={color}>
           {cap}
@@ -424,15 +532,16 @@ const smileMouth = (
   <path d={`M110,${MO} Q120,${MO + 11} 130,${MO}`} fill="none" stroke={OUTLINE} strokeWidth="3.5" strokeLinecap="round" />
 )
 
-function renderExpression(id: string) {
+function renderExpression(id: string, isMale = false) {
+  const eyeY = isMale ? 122 : EYE
   switch (id) {
     case 'joyful':
       return (
         <g>
           {blush(0.55)}
           <g stroke={OUTLINE} strokeWidth="4" fill="none" strokeLinecap="round">
-            <path d={`M${EL - 8},${EYE + 2} Q${EL},${EYE - 8} ${EL + 8},${EYE + 2}`} />
-            <path d={`M${ER - 8},${EYE + 2} Q${ER},${EYE - 8} ${ER + 8},${EYE + 2}`} />
+            <path d={`M${EL - 8},${eyeY + 2} Q${EL},${eyeY - 8} ${EL + 8},${eyeY + 2}`} />
+            <path d={`M${ER - 8},${eyeY + 2} Q${ER},${eyeY - 8} ${ER + 8},${eyeY + 2}`} />
           </g>
           <path d={`M106,${MO} Q120,${MO + 16} 134,${MO} Z`} fill="#c93a4a" stroke={OUTLINE} strokeWidth="2" />
           <path d={`M108,${MO} Q120,${MO + 4} 132,${MO}`} fill="#fff" />
@@ -443,7 +552,7 @@ function renderExpression(id: string) {
         <g>
           {blush()}
           {pupil(EL)}
-          <path d={`M${ER - 8},${EYE + 2} Q${ER},${EYE - 8} ${ER + 8},${EYE + 2}`} stroke={OUTLINE} strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d={`M${ER - 8},${eyeY + 2} Q${ER},${eyeY - 8} ${ER + 8},${eyeY + 2}`} stroke={OUTLINE} strokeWidth="4" fill="none" strokeLinecap="round" />
           {smileMouth}
         </g>
       )
@@ -451,10 +560,10 @@ function renderExpression(id: string) {
       return (
         <g>
           {blush(0.7)}
-          <ellipse cx={EL} cy={EYE} rx="8" ry="10" fill={OUTLINE} />
-          <ellipse cx={ER} cy={EYE} rx="8" ry="10" fill={OUTLINE} />
-          <circle cx={EL - 3} cy={EYE - 4} r="3" fill="#fff" />
-          <circle cx={ER - 3} cy={EYE - 4} r="3" fill="#fff" />
+          <ellipse cx={EL} cy={eyeY} rx="8" ry="10" fill={OUTLINE} />
+          <ellipse cx={ER} cy={eyeY} rx="8" ry="10" fill={OUTLINE} />
+          <circle cx={EL - 3} cy={eyeY - 4} r="3" fill="#fff" />
+          <circle cx={ER - 3} cy={eyeY - 4} r="3" fill="#fff" />
           <path d={`M113,${MO} Q120,${MO + 7} 127,${MO}`} fill="none" stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
         </g>
       )
@@ -462,12 +571,12 @@ function renderExpression(id: string) {
       return (
         <g>
           {blush()}
-          <path d={`M${EL - 9},${EYE - 12} q9,-5 18,0`} fill="none" stroke={OUTLINE} strokeWidth="2.5" strokeLinecap="round" />
-          <path d={`M${ER - 9},${EYE - 12} q9,-5 18,0`} fill="none" stroke={OUTLINE} strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx={EL} cy={EYE} r="9" fill="#fff" stroke={OUTLINE} strokeWidth="2" />
-          <circle cx={ER} cy={EYE} r="9" fill="#fff" stroke={OUTLINE} strokeWidth="2" />
-          <circle cx={EL} cy={EYE} r="4" fill={OUTLINE} />
-          <circle cx={ER} cy={EYE} r="4" fill={OUTLINE} />
+          <path d={`M${EL - 9},${eyeY - 12} q9,-5 18,0`} fill="none" stroke={OUTLINE} strokeWidth="2.5" strokeLinecap="round" />
+          <path d={`M${ER - 9},${eyeY - 12} q9,-5 18,0`} fill="none" stroke={OUTLINE} strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx={EL} cy={eyeY} r="9" fill="#fff" stroke={OUTLINE} strokeWidth="2" />
+          <circle cx={ER} cy={eyeY} r="9" fill="#fff" stroke={OUTLINE} strokeWidth="2" />
+          <circle cx={EL} cy={eyeY} r="4" fill={OUTLINE} />
+          <circle cx={ER} cy={eyeY} r="4" fill={OUTLINE} />
           <ellipse cx="120" cy={MO + 3} rx="7" ry="9" fill="#c93a4a" stroke={OUTLINE} strokeWidth="2" />
         </g>
       )
@@ -475,7 +584,7 @@ function renderExpression(id: string) {
       return (
         <g>
           {blush(0.6)}
-          <path d={`M${EL - 8},${EYE + 2} Q${EL},${EYE - 8} ${EL + 8},${EYE + 2}`} stroke={OUTLINE} strokeWidth="4" fill="none" strokeLinecap="round" />
+          <path d={`M${EL - 8},${eyeY + 2} Q${EL},${eyeY - 8} ${EL + 8},${eyeY + 2}`} stroke={OUTLINE} strokeWidth="4" fill="none" strokeLinecap="round" />
           {pupil(ER)}
           <path d={`M108,${MO} Q120,${MO + 12} 132,${MO} Z`} fill="#c93a4a" stroke={OUTLINE} strokeWidth="2" />
           <path d="M116,150 Q116,164 124,164 Q132,164 132,150 Z" fill="#ff7a90" stroke={OUTLINE} strokeWidth="1.5" />
@@ -484,7 +593,6 @@ function renderExpression(id: string) {
     case 'cool':
       return (
         <g>
-          {/* gafas de sol integradas */}
           <g stroke={OUTLINE} strokeWidth="2">
             <path d="M86,113 h26 a4,4 0 0 1 4,4 v3 a10,10 0 0 1 -20,0 v-4 Z" fill="#20304a" />
             <path d="M128,113 h26 a4,4 0 0 1 0,7 v0 a10,10 0 0 1 -20,0 v-3 a4,4 0 0 1 -6,-4 Z" fill="#20304a" />
@@ -496,8 +604,8 @@ function renderExpression(id: string) {
     case 'angry':
       return (
         <g>
-          <path d={`M${EL - 9},${EYE - 9} L${EL + 8},${EYE - 4}`} stroke={OUTLINE} strokeWidth="3.5" strokeLinecap="round" />
-          <path d={`M${ER + 9},${EYE - 9} L${ER - 8},${EYE - 4}`} stroke={OUTLINE} strokeWidth="3.5" strokeLinecap="round" />
+          <path d={`M${EL - 9},${eyeY - 9} L${EL + 8},${eyeY - 4}`} stroke={OUTLINE} strokeWidth="3.5" strokeLinecap="round" />
+          <path d={`M${ER + 9},${eyeY - 9} L${ER - 8},${eyeY - 4}`} stroke={OUTLINE} strokeWidth="3.5" strokeLinecap="round" />
           {pupil(EL, 6)}
           {pupil(ER, 6)}
           <path d={`M110,${MO + 5} Q120,${MO - 4} 130,${MO + 5}`} fill="none" stroke={OUTLINE} strokeWidth="3.5" strokeLinecap="round" />
@@ -506,8 +614,8 @@ function renderExpression(id: string) {
     case 'sad':
       return (
         <g>
-          <path d={`M${EL - 8},${EYE - 6} L${EL + 8},${EYE - 10}`} stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
-          <path d={`M${ER + 8},${EYE - 6} L${ER - 8},${EYE - 10}`} stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
+          <path d={`M${EL - 8},${eyeY - 6} L${EL + 8},${eyeY - 10}`} stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
+          <path d={`M${ER + 8},${eyeY - 6} L${ER - 8},${eyeY - 10}`} stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
           {pupil(EL, 6)}
           {pupil(ER, 6)}
           <path d="M92,126 q-3,10 3,15 q6,-5 3,-15 Z" fill="#6ec1ff" stroke="#4dabf7" strokeWidth="1" />
@@ -518,8 +626,8 @@ function renderExpression(id: string) {
       return (
         <g>
           {blush(0.85)}
-          <path d={`M${EL},${EYE + 5} C${EL - 8},${EYE - 5} ${EL - 10},${EYE + 2} ${EL},${EYE + 7} C${EL + 10},${EYE + 2} ${EL + 8},${EYE - 5} ${EL},${EYE + 5} Z`} fill="#ff4d6d" />
-          <path d={`M${ER},${EYE + 5} C${ER - 8},${EYE - 5} ${ER - 10},${EYE + 2} ${ER},${EYE + 7} C${ER + 10},${EYE + 2} ${ER + 8},${EYE - 5} ${ER},${EYE + 5} Z`} fill="#ff4d6d" />
+          <path d={`M${EL},${eyeY + 5} C${EL - 8},${eyeY - 5} ${EL - 10},${eyeY + 2} ${EL},${eyeY + 7} C${EL + 10},${eyeY + 2} ${EL + 8},${eyeY - 5} ${EL},${eyeY + 5} Z`} fill="#ff4d6d" />
+          <path d={`M${ER},${eyeY + 5} C${ER - 8},${eyeY - 5} ${ER - 10},${eyeY + 2} ${ER},${eyeY + 7} C${ER + 10},${eyeY + 2} ${ER + 8},${eyeY - 5} ${ER},${eyeY + 5} Z`} fill="#ff4d6d" />
           <path d={`M108,${MO} Q120,${MO + 12} 132,${MO}`} fill="none" stroke={OUTLINE} strokeWidth="3.5" strokeLinecap="round" />
         </g>
       )
@@ -527,8 +635,8 @@ function renderExpression(id: string) {
       return (
         <g>
           {blush(0.4)}
-          <path d={`M${EL - 8},${EYE} q8,6 16,0`} fill="none" stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
-          <path d={`M${ER - 8},${EYE} q8,6 16,0`} fill="none" stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
+          <path d={`M${EL - 8},${eyeY} q8,6 16,0`} fill="none" stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
+          <path d={`M${ER - 8},${eyeY} q8,6 16,0`} fill="none" stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
           <ellipse cx="120" cy={MO + 2} rx="4" ry="5" fill="#c93a4a" />
           <text x="156" y="96" fontSize="16" fontWeight="700" fill={OUTLINE} fontFamily="sans-serif">z</text>
           <text x="166" y="84" fontSize="12" fontWeight="700" fill={OUTLINE} fontFamily="sans-serif">z</text>
@@ -538,10 +646,10 @@ function renderExpression(id: string) {
       return (
         <g>
           {blush(0.7)}
-          <circle cx={EL} cy={EYE} r="9" fill={OUTLINE} />
-          <circle cx={ER} cy={EYE} r="9" fill={OUTLINE} />
-          {sparkleAt(EL, EYE, 8, '#ffd43b')}
-          {sparkleAt(ER, EYE, 8, '#ffd43b')}
+          <circle cx={EL} cy={eyeY} r="9" fill={OUTLINE} />
+          <circle cx={ER} cy={eyeY} r="9" fill={OUTLINE} />
+          {sparkleAt(EL, eyeY, 8, '#ffd43b')}
+          {sparkleAt(ER, eyeY, 8, '#ffd43b')}
           {sparkleAt(76, 104, 6, '#ffd43b')}
           {sparkleAt(164, 108, 5, '#ff6b6b')}
           <path d={`M106,${MO} Q120,${MO + 15} 134,${MO} Z`} fill="#c93a4a" stroke={OUTLINE} strokeWidth="2" />
@@ -551,7 +659,7 @@ function renderExpression(id: string) {
     default: // happy
       return (
         <g>
-          {blush()}
+          {blush(isMale ? 0.35 : 0.5)}
           {pupil(EL)}
           {pupil(ER)}
           {smileMouth}

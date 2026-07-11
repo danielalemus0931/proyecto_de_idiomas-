@@ -1,3 +1,4 @@
+import { isStudentGrade } from './courses'
 import type { StudentGrade } from '../types'
 
 const STORAGE_KEY = 'langflow-student-course'
@@ -8,8 +9,7 @@ export function getStudentCourse(userId: string): StudentGrade | null {
     if (!raw) return null
     const data = JSON.parse(raw) as Record<string, StudentGrade>
     const grade = data[userId]
-    if (grade === 8 || grade === 9 || grade === 10 || grade === 11) return grade
-    return null
+    return isStudentGrade(grade) ? grade : null
   } catch {
     return null
   }

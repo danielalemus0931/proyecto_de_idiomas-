@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { quizPassThreshold } from '../../lib/courses'
+import { getCourse, quizPassThreshold } from '../../lib/courses'
 import { scoreWrittenQuiz } from '../../lib/lessonQuiz'
 import type { StudentGrade, WrittenQuizQuestion } from '../../types'
 import SpeakButton from '../SpeakButton'
@@ -52,7 +52,7 @@ export default function WrittenQuiz({
       <header className="written-quiz-header">
         <h3>Quiz escrito</h3>
         <p className="written-quiz-meta">
-          Curso {grade}° · {questions.length} preguntas nuevas (no repetidas de gramática, vocabulario ni
+          {getCourse(grade).label} · {questions.length} preguntas nuevas (no repetidas de gramática, vocabulario ni
           juegos) · Necesitas {Math.ceil(threshold * 100)}% para aprobar
         </p>
       </header>

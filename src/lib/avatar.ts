@@ -37,12 +37,14 @@ export const AVATAR_CATEGORIES: AvatarCategory[] = [
     kind: 'style',
     options: [
       // Femeninos
+      { value: 'longWavy', label: 'Ondulado largo', level: 1, gender: 'female' },
       { value: 'longStraight', label: 'Largo liso', level: 1, gender: 'female' },
       { value: 'ponytail', label: 'Cola de caballo', level: 1, gender: 'female' },
       { value: 'bun', label: 'Moño', level: 1, gender: 'female' },
       { value: 'twinTails', label: 'Dos coletas', level: 2, gender: 'female' },
       { value: 'curlyLong', label: 'Rizado largo', level: 2, gender: 'female' },
       { value: 'bob', label: 'Bob', level: 3, gender: 'female' },
+      { value: 'bangs', label: 'Con flequillo', level: 2, gender: 'female' },
       // Masculinos
       { value: 'shortMessy', label: 'Corto despeinado', level: 1, gender: 'male' },
       { value: 'buzz', label: 'Rapado', level: 1, gender: 'male' },
@@ -50,6 +52,7 @@ export const AVATAR_CATEGORIES: AvatarCategory[] = [
       { value: 'spiky', label: 'En picos', level: 2, gender: 'male' },
       { value: 'curlyShort', label: 'Rizado corto', level: 2, gender: 'male' },
       { value: 'manBun', label: 'Moño alto', level: 3, gender: 'male' },
+      { value: 'slick', label: 'Peinado', level: 2, gender: 'male' },
       // Unisex
       { value: 'afro', label: 'Afro', level: 3 },
     ],
@@ -62,10 +65,12 @@ export const AVATAR_CATEGORIES: AvatarCategory[] = [
     kind: 'style',
     options: [
       { value: 'tshirt', label: 'Camiseta', level: 1 },
-      { value: 'striped', label: 'Rayas', level: 1 },
-      { value: 'tank', label: 'Sin mangas', level: 1 },
-      { value: 'hoodie', label: 'Sudadera', level: 2 },
+      { value: 'striped', label: 'Suéter / rayas', level: 1 },
+      { value: 'tank', label: 'Crop / sin mangas', level: 1, gender: 'female' },
+      { value: 'hoodie', label: 'Sudadera', level: 1 },
+      { value: 'cardigan', label: 'Cárdigan', level: 1, gender: 'female' },
       { value: 'jacket', label: 'Chaqueta', level: 2 },
+      { value: 'denim', label: 'Chaqueta denim', level: 1, gender: 'male' },
       { value: 'dress', label: 'Vestido', level: 1, gender: 'female' },
     ],
   },
@@ -76,7 +81,7 @@ export const AVATAR_CATEGORIES: AvatarCategory[] = [
     icon: '👖',
     kind: 'style',
     options: [
-      { value: 'pants', label: 'Pantalón', level: 1 },
+      { value: 'pants', label: 'Pantalón / jeans', level: 1 },
       { value: 'shorts', label: 'Shorts', level: 1 },
       { value: 'skirt', label: 'Falda', level: 1, gender: 'female' },
     ],
@@ -139,32 +144,32 @@ export const AVATAR_CATEGORIES: AvatarCategory[] = [
 
 export const DEFAULT_FEMALE: AvatarConfig = {
   skin: '#f1c27d',
-  hair: 'longStraight',
-  hairColor: '#4a312c',
-  top: 'tshirt',
-  topColor: '#f06595',
-  bottom: 'skirt',
-  bottomColor: '#845ef7',
+  hair: 'longWavy',
+  hairColor: '#2c1b18',
+  top: 'cardigan',
+  topColor: '#845ef7',
+  bottom: 'pants',
+  bottomColor: '#4dabf7',
   shoes: 'sneakers',
-  shoesColor: '#ff6b6b',
+  shoesColor: '#ffffff',
   expression: 'happy',
   accessory: '',
-  background: '#fff0f6',
+  background: '#e8e0ff',
 }
 
 export const DEFAULT_MALE: AvatarConfig = {
   skin: '#e0ac69',
   hair: 'shortMessy',
   hairColor: '#2c1b18',
-  top: 'tshirt',
-  topColor: '#4dabf7',
+  top: 'denim',
+  topColor: '#212529',
   bottom: 'pants',
-  bottomColor: '#495057',
+  bottomColor: '#343a40',
   shoes: 'sneakers',
   shoesColor: '#212529',
   expression: 'happy',
   accessory: '',
-  background: '#e7f5ff',
+  background: '#dbe4ff',
 }
 
 export function defaultAvatar(gender: Gender): AvatarConfig {
@@ -172,5 +177,14 @@ export function defaultAvatar(gender: Gender): AvatarConfig {
 }
 
 export function mergeAvatar(gender: Gender, config: Partial<AvatarConfig> | null): AvatarConfig {
-  return { ...defaultAvatar(gender), ...(config ?? {}) }
+  const base = defaultAvatar(gender)
+  const merged = { ...base, ...(config ?? {}) }
+  // Si el estilo guardado no corresponde al género, vuelve al default de ese género.
+  const hairOpt = AVATAR_CATEGORIES.find((c) => c.key === 'hair')?.options.find((o) => o.value === merged.hair)
+  if (hairOpt?.gender && hairOpt.gender !== gender) merged.hair = base.hair
+  const topOpt = AVATAR_CATEGORIES.find((c) => c.key === 'top')?.options.find((o) => o.value === merged.top)
+  if (topOpt?.gender && topOpt.gender !== gender) merged.top = base.top
+  const bottomOpt = AVATAR_CATEGORIES.find((c) => c.key === 'bottom')?.options.find((o) => o.value === merged.bottom)
+  if (bottomOpt?.gender && bottomOpt.gender !== gender) merged.bottom = base.bottom
+  return merged
 }

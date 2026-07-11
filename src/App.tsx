@@ -12,11 +12,19 @@ import LessonActivities from './components/activities/LessonActivities'
 
 import StopGame from './components/activities/StopGame'
 
+import GradeSidebar from './components/GradeSidebar'
+
+import SubjectView from './components/SubjectView'
+
+import GradeSyllabusView from './components/GradeSyllabusView'
+
 import AvatarStudio from './components/AvatarStudio'
-import BodyAvatar from './components/BodyAvatar'
+import BrandLogo from './components/BrandLogo'
+import KawaiiAvatar from './components/KawaiiAvatar'
+import ConfettiBurst from './components/ConfettiBurst'
 import { supabase } from './lib/supabase'
-import { defaultAvatar, mergeAvatar } from './lib/avatar'
-import { levelFromPoints, POINTS_PER_CORRECT } from './lib/gamification'
+import { defaultKawaiiAvatar, fromAvatarConfig, mergeKawaiiAvatar } from './lib/kawaiiAvatar'
+import { earnedBadges, levelFromPoints, POINTS_PER_CORRECT } from './lib/gamification'
 import { LANG_BCP47 } from './lib/speech'
 import { syncStudentProgress } from './lib/progressSync'
 import {
@@ -29,11 +37,11 @@ import {
 
   lessons,
 
-  TOTAL_VOCABULARY_WORDS,
-
   vocabulary,
 
 } from './data/content'
+
+import { SCHOOL_SUBJECTS, countGradeTopics, type SchoolSubjectId } from './data/subjects'
 
 import type { AvatarConfig, Gender, LanguageLevel, Role, StudentGrade, User, LessonActivityId } from './types'
 
@@ -50,15 +58,17 @@ import {
   markActivityComplete,
 } from './lib/lessonProgress'
 
-import { COURSES, getCourse, isLevelAvailableForGrade } from './lib/courses'
+import { getCourse, isLevelAvailableForGrade } from './lib/courses'
 
 import { getStudentCourse, setStudentCourse } from './lib/studentCourse'
+
+import { clearDemoSession, getDemoUser } from './lib/demoAuth'
 
 import { enrichVocabularyExamples, getGrammarForLesson } from './lib/grammarContent'
 
 import { buildWrittenQuiz } from './lib/lessonQuiz'
 
-type Screen = 'home' | 'lessons' | 'lesson' | 'stop' | 'admin' | 'avatar'
+type Screen = 'home' | 'lessons' | 'lesson' | 'subject' | 'syllabus' | 'stop' | 'admin' | 'avatar'
 
 
 
@@ -69,18 +79,23 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true)
 
   const [screen, setScreen] = useState<Screen>('home')
+  const [gradesMenuOpen, setGradesMenuOpen] = useState(false)
 
   const [selectedLanguageId, setSelectedLanguageId] = useState<string | null>(null)
+
+  const [selectedSubjectId, setSelectedSubjectId] = useState<SchoolSubjectId | null>(null)
 
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null)
 
   const [points, setPoints] = useState(0)
 
-  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(defaultAvatar('female'))
+  const [avatarConfig, setAvatarConfig] = useState<AvatarConfig>(defaultKawaiiAvatar())
 
   const [progressTick, setProgressTick] = useState(0)
 
   const [studentGrade, setStudentGrade] = useState<StudentGrade | null>(null)
+
+  const [showConfetti, setShowConfetti] = useState(false)
 
 
 
@@ -108,7 +123,7 @@ function App() {
           assignedLanguage: data.assigned_language ?? null,
         })
         setPoints(data.points ?? 0)
-        setAvatarConfig(mergeAvatar(gender, data.avatar_config))
+        setAvatarConfig(mergeKawaiiAvatar(data.avatar_config))
       } else {
         setCurrentUser({
           id: userId,
@@ -119,14 +134,22 @@ function App() {
           assignedLanguage: null,
         })
         setPoints(0)
-        setAvatarConfig(defaultAvatar('female'))
+        setAvatarConfig(defaultKawaiiAvatar())
       }
 
       setStudentGrade(getStudentCourse(userId))
 
     }
 
-
+    const demoUser = getDemoUser()
+    if (demoUser) {
+      setCurrentUser(demoUser)
+      setPoints(0)
+      setAvatarConfig(mergeKawaiiAvatar(null))
+      setStudentGrade(getStudentCourse(demoUser.id))
+      setAuthLoading(false)
+      return
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
 
@@ -148,7 +171,7 @@ function App() {
 
         loadProfile(session.user.id, session.user.email ?? '')
 
-      } else {
+      } else if (!getDemoUser()) {
 
         setCurrentUser(null)
 
@@ -175,18 +198,17 @@ function App() {
 
 
   const activeGrade: StudentGrade | null =
-
-    currentUser?.role === 'staff' ? 11 : studentGrade
-
+    studentGrade ?? (currentUser?.role === 'staff' ? 11 : null)
 
 
-  const activeCourse = activeGrade ? getCourse(activeGrade) : null
+
+  const activeCourse = activeGrade !== null ? getCourse(activeGrade) : null
 
 
 
   const lessonWords = useMemo(() => {
 
-    if (!selectedLessonId || !activeGrade) return defaultVocabulary
+    if (!selectedLessonId || activeGrade === null) return defaultVocabulary
 
     const base = vocabulary[selectedLessonId] ?? defaultVocabulary
 
@@ -198,7 +220,7 @@ function App() {
 
   const grammarBlocks = useMemo(() => {
 
-    if (!currentLesson || !activeGrade || !selectedLanguageId) return []
+    if (!currentLesson || activeGrade === null || !selectedLanguageId) return []
 
     return getGrammarForLesson(selectedLanguageId, currentLesson, activeGrade)
 
@@ -208,7 +230,7 @@ function App() {
 
   const writtenQuiz = useMemo(() => {
 
-    if (!currentLesson || !activeGrade || !selectedLanguageId) return []
+    if (!currentLesson || activeGrade === null || !selectedLanguageId) return []
 
     return buildWrittenQuiz(
 
@@ -225,10 +247,6 @@ function App() {
     )
 
   }, [currentLesson, selectedLanguageId, activeGrade, grammarBlocks])
-
-
-
-  const totalLessonsAllLangs = Object.values(lessons).reduce((sum, list) => sum + list.length, 0)
 
 
 
@@ -292,7 +310,7 @@ function App() {
 
           .filter((level) =>
 
-            activeGrade ? isLevelAvailableForGrade(level.order, activeGrade) : true,
+            activeGrade !== null ? isLevelAvailableForGrade(level.order, activeGrade) : true,
 
           )
 
@@ -319,20 +337,17 @@ function App() {
 
 
   const selectCourse = (grade: StudentGrade) => {
-
     if (!currentUser) return
-
     setStudentCourse(currentUser.id, grade)
-
     setStudentGrade(grade)
-
+    setGradesMenuOpen(false)
   }
 
 
 
   const openLanguage = (languageId: string) => {
 
-    if (currentUser?.role === 'student' && !studentGrade) return
+    if (currentUser?.role === 'student' && studentGrade === null) return
 
     // El docente asigna el idioma: el estudiante solo entra al asignado.
     if (
@@ -342,12 +357,31 @@ function App() {
     )
       return
 
+    setSelectedSubjectId(null)
+
     setSelectedLanguageId(languageId)
 
     setSelectedLessonId(null)
 
     setScreen('lessons')
 
+  }
+
+  const openSubject = (subjectId: SchoolSubjectId) => {
+    if (currentUser?.role === 'student' && studentGrade === null) return
+    setSelectedLanguageId(null)
+    setSelectedLessonId(null)
+    setSelectedSubjectId(subjectId)
+    setScreen('subject')
+  }
+
+  const openSyllabus = () => {
+    if (currentUser?.role === 'student' && studentGrade === null) return
+    if (activeGrade === null) return
+    setSelectedLanguageId(null)
+    setSelectedLessonId(null)
+    setSelectedSubjectId(null)
+    setScreen('syllabus')
   }
 
 
@@ -367,6 +401,8 @@ function App() {
     setScreen('home')
 
     setSelectedLanguageId(null)
+
+    setSelectedSubjectId(null)
 
     setSelectedLessonId(null)
 
@@ -394,12 +430,24 @@ function App() {
 
   const handleLogout = async () => {
 
+    clearDemoSession()
+
     await supabase.auth.signOut()
 
     setCurrentUser(null)
 
     goHome()
 
+  }
+
+  const enterDemo = () => {
+    const demoUser = getDemoUser()
+    if (!demoUser) return
+    setCurrentUser(demoUser)
+    setPoints(0)
+    setAvatarConfig(defaultKawaiiAvatar())
+    setStudentGrade(getStudentCourse(demoUser.id))
+    setScreen('home')
   }
 
 
@@ -422,11 +470,15 @@ function App() {
 
 
 
+    const prevBadges = earnedBadges(points).length
+
     const newPoints = points + score * POINTS_PER_CORRECT
 
     setPoints(newPoints)
 
     void persistProfile({ points: newPoints })
+
+    if (earnedBadges(newPoints).length > prevBadges) setShowConfetti(true)
 
   }
 
@@ -436,12 +488,22 @@ function App() {
 
     if (!currentUser || amount <= 0) return
 
+    const prevBadges = earnedBadges(points).length
+
     const newPoints = points + amount
 
     setPoints(newPoints)
 
     void persistProfile({ points: newPoints })
 
+    if (earnedBadges(newPoints).length > prevBadges) setShowConfetti(true)
+
+  }
+
+  const handlePersonalizedLessonComplete = (result: { correct: number; total: number }) => {
+    const bonus = Math.max(5, result.correct * POINTS_PER_CORRECT)
+    handleAwardPoints(bonus)
+    setShowConfetti(true)
   }
 
 
@@ -517,7 +579,7 @@ function App() {
 
   if (!currentUser) {
 
-    return <Login />
+    return <Login onDemoLogin={enterDemo} />
 
   }
 
@@ -525,13 +587,40 @@ function App() {
 
   return (
 
-    <div className="app">
+    <div className="app-shell">
+
+      <ConfettiBurst active={showConfetti} onDone={() => setShowConfetti(false)} />
+
+      <GradeSidebar
+        selected={studentGrade}
+        open={gradesMenuOpen}
+        onSelect={selectCourse}
+        onClose={() => setGradesMenuOpen(false)}
+      />
+
+      <div className="app">
 
       <nav className="top-bar">
 
+        <button
+          type="button"
+          className={`menu-burger ${gradesMenuOpen ? 'is-open' : ''}`}
+          onClick={() => setGradesMenuOpen((v) => !v)}
+          aria-label={gradesMenuOpen ? 'Cerrar menú de grados' : 'Abrir menú de grados'}
+          aria-expanded={gradesMenuOpen}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <button type="button" className="top-bar-brand" onClick={goHome} aria-label="Ir al inicio">
+          <BrandLogo size="sm" />
+        </button>
+
         <span className="top-bar-user">
           <span className="top-bar-avatar">
-            <BodyAvatar config={avatarConfig} size={54} showBackground={false} />
+            <KawaiiAvatar config={fromAvatarConfig(avatarConfig)} size={48} />
           </span>
           <span className="top-bar-user-info">
 
@@ -547,7 +636,7 @@ function App() {
 
               {activeCourse && (
 
-                <span className="course-badge">Curso {activeCourse.shortLabel}</span>
+                <span className="course-badge">{activeCourse.label}</span>
 
               )}
 
@@ -603,8 +692,8 @@ function App() {
         <AvatarStudio
           config={avatarConfig}
           points={points}
-          gender={currentUser.gender}
           onChange={handleAvatarChange}
+          onDone={goHome}
         />
       )}
 
@@ -614,143 +703,125 @@ function App() {
 
         <>
 
-          <header className="app-header">
-
-            <div className="logo">
-
-              <span className="logo-icon" aria-hidden="true">
-
-                🌍
-
-              </span>
-
-              Langflow
-
+          <header className="welcome-card">
+            <div className="welcome-card-avatar">
+              <KawaiiAvatar config={fromAvatarConfig(avatarConfig)} size={110} />
             </div>
-
-            <h1>Aprende idiomas a tu ritmo</h1>
-
-            <p>Elige tu curso, practica gramática y verifica tus respuestas por escrito.</p>
-
+            <div className="welcome-card-body">
+              <p className="welcome-card-hello">¡Hola, {currentUser.name}! ✨</p>
+              <h1>
+                El conocimiento también puede ser divertido. Atrévete a aprender de una forma
+                diferente
+              </h1>
+              <p className="welcome-card-hint">
+                Toca el menú ☰ para elegir tu grado y empieza a explorar.
+              </p>
+              {activeCourse && (
+                <p className="welcome-card-grade">
+                  Grado actual: <strong>{activeCourse.label}</strong>
+                </p>
+              )}
+            </div>
           </header>
 
 
 
-          <div className="stats-bar">
-
-            <div className="stat-card">
-
-              <span className="stat-value">4</span>
-
-              <span className="stat-label">Cursos</span>
-
-            </div>
-
-            <div className="stat-card">
-
-              <span className="stat-value">{languages.length}</span>
-
-              <span className="stat-label">Idiomas</span>
-
-            </div>
-
-            <div className="stat-card">
-
-              <span className="stat-value">{TOTAL_VOCABULARY_WORDS}+</span>
-
-              <span className="stat-label">Palabras</span>
-
-            </div>
-
-            <div className="stat-card">
-
-              <span className="stat-value">{totalLessonsAllLangs}</span>
-
-              <span className="stat-label">Lecciones</span>
-
-            </div>
-
-          </div>
-
-
-
-          <h2 className="section-title">Elige tu curso</h2>
+          <h2 className="section-title">Tu grado escolar</h2>
 
           <p className="course-section-intro">
 
-            La dificultad del idioma depende de tu grado escolar. Cada curso desbloquea más niveles
+            Usa el botón ☰ para abrir el menú de grados (Prescolar a 11°).
 
-            y preguntas más exigentes en el quiz escrito.
+            Cada grado desbloquea más niveles y ajusta la dificultad del quiz.
 
           </p>
-
-          <div className="course-grid">
-
-            {COURSES.map((course) => {
-
-              const selected = studentGrade === course.grade
-
-              return (
-
-                <button
-
-                  key={course.grade}
-
-                  type="button"
-
-                  className={`course-card ${selected ? 'course-card--selected' : ''}`}
-
-                  onClick={() => selectCourse(course.grade)}
-
-                >
-
-                  <span className="course-grade">{course.shortLabel}</span>
-
-                  <h3>{course.label}</h3>
-
-                  <p>{course.description}</p>
-
-                  <div className="course-meta">
-
-                    <span className="course-chip">{course.difficultyLabel}</span>
-
-                    <span className="course-chip">{course.cefrRange}</span>
-
-                    <span className="course-chip">{course.maxLevel} niveles</span>
-
-                  </div>
-
-                  {selected && <span className="course-selected-tag">Tu curso actual</span>}
-
-                </button>
-
-              )
-
-            })}
-
-          </div>
-
-
-
-          {currentUser.role === 'student' && !studentGrade && (
-
-            <p className="course-pick-hint">Selecciona tu curso (8°, 9°, 10° u 11°) para acceder a los idiomas.</p>
-
-          )}
-
-
-
-          <h2 className="section-title">Idiomas disponibles</h2>
 
           {activeCourse && (
 
             <p className="course-active-banner">
 
-              Curso {activeCourse.label}: dificultad {activeCourse.difficultyLabel} ({activeCourse.cefrRange})
+              Grado seleccionado: {activeCourse.label} · {activeCourse.difficultyLabel} ({activeCourse.cefrRange})
 
             </p>
 
           )}
+
+          {currentUser.role === 'student' && studentGrade === null && (
+
+            <p className="course-pick-hint">Selecciona tu grado con el botón ☰ (Prescolar a 11°) para acceder a las materias e idiomas.</p>
+
+          )}
+
+          <h2 className="section-title">Temario del curso</h2>
+
+          <p className="course-section-intro">
+            Módulo con todos los temas que se van a ver en el grado seleccionado.
+          </p>
+
+          <button
+            type="button"
+            className={`syllabus-module-card ${activeGrade === null ? 'syllabus-module-card--disabled' : ''}`}
+            disabled={activeGrade === null}
+            onClick={openSyllabus}
+          >
+            <span className="syllabus-module-icon" aria-hidden="true">
+              📋
+            </span>
+            <span className="syllabus-module-text">
+              <strong>
+                {activeCourse
+                  ? `Temario completo · ${activeCourse.label}`
+                  : 'Temario completo del curso'}
+              </strong>
+              <span>
+                {activeGrade !== null
+                  ? `${countGradeTopics(activeGrade)} temas de Matemáticas, Español y Ciencias naturales`
+                  : 'Elige un grado con el menú ☰ para ver el temario'}
+              </span>
+            </span>
+            <span className="syllabus-module-cta">
+              {activeGrade === null ? 'Elige grado' : 'Ver temas'}
+            </span>
+          </button>
+
+
+
+          <h2 className="section-title">Materias del curso</h2>
+
+          <p className="course-section-intro">
+            Temas alineados a los Derechos Básicos de Aprendizaje (DBA) y Estándares del Ministerio de Educación Nacional.
+          </p>
+
+          <div className="subject-grid">
+            {SCHOOL_SUBJECTS.map((subject) => {
+              const disabled = currentUser.role === 'student' && studentGrade === null
+              return (
+                <button
+                  key={subject.id}
+                  type="button"
+                  className={`subject-card ${disabled ? 'subject-card--disabled' : ''}`}
+                  style={{ ['--subject-accent' as string]: subject.accent }}
+                  disabled={disabled}
+                  onClick={() => openSubject(subject.id)}
+                >
+                  <span className="subject-card-icon" aria-hidden="true">
+                    {subject.icon}
+                  </span>
+                  <h3>{subject.name}</h3>
+                  <p>{subject.description}</p>
+                  <span className="badge">
+                    {disabled ? 'Elige grado' : activeCourse ? activeCourse.label : 'Abrir'}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <h2 className="section-title">Idiomas disponibles</h2>
+
+          <p className="course-section-intro">
+            Inglés, francés y portugués.
+          </p>
 
           <div className="language-grid">
 
@@ -762,7 +833,7 @@ function App() {
                 currentUser.assignedLanguage !== language.id
               const isAssigned =
                 currentUser.role === 'student' && currentUser.assignedLanguage === language.id
-              const disabled = (currentUser.role === 'student' && !studentGrade) || notAssigned
+              const disabled = (currentUser.role === 'student' && studentGrade === null) || notAssigned
 
               return (
 
@@ -812,9 +883,26 @@ function App() {
 
       )}
 
+      {screen === 'syllabus' && activeGrade !== null && (
+        <GradeSyllabusView
+          grade={activeGrade}
+          onBack={goHome}
+          onOpenSubject={openSubject}
+        />
+      )}
+
+      {screen === 'subject' && selectedSubjectId && activeGrade !== null && (
+        <SubjectView
+          subjectId={selectedSubjectId}
+          grade={activeGrade}
+          onBack={goHome}
+          onLessonComplete={handlePersonalizedLessonComplete}
+        />
+      )}
 
 
-      {screen === 'lessons' && selectedLanguage && activeGrade && (
+
+      {screen === 'lessons' && selectedLanguage && activeGrade !== null && (
 
         <>
 
@@ -1112,11 +1200,11 @@ function App() {
 
 
 
-          {studentGrade && studentGrade < 11 && (
+          {studentGrade !== null && studentGrade < 11 && (
 
             <p className="course-upgrade-hint">
 
-              En {studentGrade + 1}° grado se desbloquearán más niveles y condicionales avanzados.
+              En {getCourse((studentGrade + 1) as StudentGrade).label} se desbloquearán más niveles y contenidos avanzados.
 
             </p>
 
@@ -1154,7 +1242,7 @@ function App() {
 
 
 
-      {screen === 'lesson' && currentLesson && selectedLanguage && activeGrade && (
+      {screen === 'lesson' && currentLesson && selectedLanguage && activeGrade !== null && (
 
         <>
 
@@ -1221,6 +1309,8 @@ function App() {
         </>
 
       )}
+
+    </div>
 
     </div>
 

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { StudentGrade, VocabularyItem } from '../../types'
+import { getCourse } from '../../lib/courses'
 import { shuffle } from '../../utils/activityHelpers'
 import Pronunciation from '../Pronunciation'
 import { recognitionSupported } from '../../lib/speech'
@@ -13,11 +14,14 @@ type Props = {
 }
 
 // La dificultad aumenta con el curso: más palabras, más largas y más puntos.
-const DIFFICULTY: Record<StudentGrade, { count: number; min: number; max: number; points: number }> = {
-  8: { count: 3, min: 5, max: 6, points: 10 },
-  9: { count: 4, min: 5, max: 7, points: 15 },
-  10: { count: 5, min: 5, max: 8, points: 20 },
-  11: { count: 6, min: 5, max: 10, points: 25 },
+function spellingConfig(grade: StudentGrade): { count: number; min: number; max: number; points: number } {
+  if (grade <= 2) return { count: 2, min: 3, max: 5, points: 5 }
+  if (grade <= 5) return { count: 3, min: 4, max: 6, points: 8 }
+  if (grade <= 7) return { count: 3, min: 5, max: 6, points: 10 }
+  if (grade === 8) return { count: 3, min: 5, max: 6, points: 10 }
+  if (grade === 9) return { count: 4, min: 5, max: 7, points: 15 }
+  if (grade === 10) return { count: 5, min: 5, max: 8, points: 20 }
+  return { count: 6, min: 5, max: 10, points: 25 }
 }
 
 function letters(word: string): string {
@@ -31,7 +35,7 @@ function norm(word: string): string {
 }
 
 export default function Spelling({ items, speechLang, grade, completed = false, onComplete }: Props) {
-  const cfg = DIFFICULTY[grade] ?? DIFFICULTY[8]
+  const cfg = spellingConfig(grade)
 
   const words = useMemo(() => {
     const seen = new Set<string>()
@@ -96,7 +100,7 @@ export default function Spelling({ items, speechLang, grade, completed = false, 
 
   return (
     <section className="activity-section spelling">
-      <h3>Deletreo · Curso {grade}°</h3>
+      <h3>Deletreo · {getCourse(grade).label}</h3>
       <p className="activity-hint">
         Escucha la palabra con 🔊 y <strong>deletréala en voz alta con 🎤</strong>: di el nombre de
         cada letra en inglés (por ejemplo <em>cat</em> → &quot;C - A - T&quot;). No digas la palabra
